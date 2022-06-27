@@ -1,11 +1,10 @@
-package main
-
-import "net"
+package server
 
 type NotificationType int
 
 const (
-	NORMAL NotificationType = iota
+	JOIN NotificationType = iota
+	DEFECT
 	CHANGE_DIR
 	UPLOAD
 	DOWNLOAD
@@ -14,7 +13,7 @@ const (
 )
 
 type Notification struct {
-	Type       NotificationType
-	Commands   []string
-	Connection net.Conn
+	Type     NotificationType
+	Client   *Client
+	Commands []string
 }
