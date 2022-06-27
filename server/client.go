@@ -3,12 +3,12 @@ package server
 import "net"
 
 type Client struct {
-	conn net.Conn
-	name string
-	addr string
+	Conn net.Conn
+	Name string
+	Addr string
 }
 
 func NewClient(conn net.Conn, name string) *Client {
-	client := &Client{conn: conn, name: name, addr: conn.RemoteAddr().String()}
+	client := &Client{Conn: conn, Name: name, Addr: conn.RemoteAddr().String()}
 	return client
 }

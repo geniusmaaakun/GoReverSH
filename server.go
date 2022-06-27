@@ -1,11 +1,14 @@
 package main
 
 import (
-	"GoReverSH/cmd/server"
+	"GoReverSH/server"
 	"GoReverSH/utils"
+	"bufio"
 	"context"
 	"crypto/tls"
+	"flag"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -30,18 +33,29 @@ func NewGoReverSH(host, port string) *GoReverSH {
 	signal.Notify(sigCH, os.Interrupt)
 	op := Option{host, port}
 	lock := sync.Mutex{}
-	return &GoReverSH{signalCh: sigCH, op: op, Observer: &observer, Executer: &executer, lock: &lock}
+	return &GoReverSH{signalCh: sigCH, op: op, lock: &lock}
 }
 
 func (grsh *GoReverSH) FreeAllClientMap() bool {
-	for _, c := range grsh.state.clientMap {
-		c.conn.Close()
+	for _, c := range grsh.Observer.State.ClientMap {
+		c.Conn.Close()
 	}
 	return true
 }
 
-func (grsh *GoReverSH) PrintPrompt() {
-	fmt.Printf("[GoReverSH@%s] >", grsh.state.connectingClient.name)
+func (grsh *GoReverSH) waitSignal(cancel context.CancelFunc, listner net.Listener) {
+	for {
+		select {
+		//ここですべて終了
+		case <-grsh.signalCh:
+			//CleanUp
+			fmt.Println("\n", "Cleanup")
+			cancel()
+			grsh.FreeAllClientMap()
+			listner.Close()
+			os.Exit(1)
+		}
+	}
 }
 
 func (grsh *GoReverSH) run() error {
@@ -69,30 +83,22 @@ func (grsh *GoReverSH) run() error {
 	context, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	//waitSignal
 	//CTRL + C
-	go func() {
-		for {
-			select {
-			//ここですべて終了
-			case <-grsh.signalCh:
-				//CleanUp
-				fmt.Println("Cleanup")
-				cancel()
-				grsh.FreeAllClientMap()
-				listener.Close()
-				os.Exit(1)
-			}
-		}
-	}()
+	go grsh.waitSignal(cancel, listener)
 
 	var channel = make(chan server.Notification)
 	//通知を入れるチャネル
 
+	//TODO NewObserver, NewExecuter
+	//TODO lockを渡す
 	//通知を受け取る
 	state := server.State{ClientMap: make(map[string]*server.Client)}
-	grsh.Observer = &server.Observer{Sender: nil, State: &state, Subject: channel, PromptViewFlag: false}
+	grsh.Observer = &server.Observer{State: state, Subject: channel, PromptViewFlag: false}
 	//実行コマンドを受け取る
-	grsh.Executer = &server.Executer{Observer: channel}
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Split(bufio.ScanLines)
+	grsh.Executer = &server.Executer{Scanner: scanner, Observer: channel}
 
 	//通知を待つ
 	go grsh.Observer.WaitNotice(context)
@@ -101,7 +107,10 @@ func (grsh *GoReverSH) run() error {
 	go grsh.Executer.WaitCommand(context)
 
 	//クライアントを待つ
-	grsh.waitClient(context, listener, channel)
+	err = grsh.waitClient(context, listener, channel)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -114,7 +123,7 @@ func (grsh *GoReverSH) waitClient(ctx context.Context, listener net.Listener, ch
 		}
 		defer conn.Close()
 
-		//最後まで読むようにする?
+		//長い名前の場合、最後まで読むようにする?
 		cnameBuff := make([]byte, 1024)
 		n, err := conn.Read(cnameBuff)
 		if err != nil {
@@ -126,10 +135,22 @@ func (grsh *GoReverSH) waitClient(ctx context.Context, listener net.Listener, ch
 		//read & join
 		receiver := server.Receiver{Client: client, Observer: channel}
 
-		go receiver.Start()
+		go receiver.Start(ctx)
 	}
 }
 
 func main() {
+	log.SetFlags(log.Lshortfile)
+	//自分のIPアドレスと指定
+	host := flag.String("host", "127.0.0.1", "hostIP")
+	port := flag.String("port", "8000", "server port")
+	flag.Parse()
 
+	fmt.Println(*host, *port)
+
+	grsh := NewGoReverSH(*host, *port)
+	err := grsh.run()
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

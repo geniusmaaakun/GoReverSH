@@ -5,6 +5,8 @@ type NotificationType int
 const (
 	JOIN NotificationType = iota
 	DEFECT
+	MESSAGE
+	COMMAND
 	CHANGE_DIR
 	UPLOAD
 	DOWNLOAD
@@ -13,7 +15,8 @@ const (
 )
 
 type Notification struct {
-	Type     NotificationType
-	Client   *Client
-	Commands []string
+	Type    NotificationType
+	Client  *Client
+	Message string
+	Command string
 }
