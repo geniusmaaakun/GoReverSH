@@ -19,12 +19,12 @@ func (receiver Receiver) Start(ctx context.Context) {
 	receiver.WaitMessage(ctx)
 }
 
-func (receiver Receiver) WaitMessage(ctx context.Context) {
+func (receiver Receiver) WaitMessage(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println(ctx.Err().Error())
-			return
+			return ctx.Err()
 		default:
 			var buf = make([]byte, 1024)
 
@@ -34,12 +34,12 @@ func (receiver Receiver) WaitMessage(ctx context.Context) {
 				if errors.Is(err, io.EOF) {
 					//退出通知
 					receiver.Observer <- Notification{Type: DEFECT, Client: receiver.Client}
-					return
+					return err
 				}
 				//退出通知
 				receiver.Observer <- Notification{Type: DEFECT, Client: receiver.Client}
 				log.Println(err)
-				return
+				return err
 			}
 
 			//チャネルで通知　メッセージ受信

@@ -83,10 +83,6 @@ func (grsh *GoReverSH) run() error {
 	context, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	//waitSignal
-	//CTRL + C
-	go grsh.waitSignal(cancel, listener)
-
 	var channel = make(chan server.Notification)
 	//通知を入れるチャネル
 
@@ -94,11 +90,15 @@ func (grsh *GoReverSH) run() error {
 	//TODO lockを渡す
 	//通知を受け取る
 	state := server.State{ClientMap: make(map[string]*server.Client)}
-	grsh.Observer = &server.Observer{State: state, Subject: channel, PromptViewFlag: false}
+	grsh.Observer = &server.Observer{State: state, Subject: channel, PromptViewFlag: false, Lock: grsh.lock}
 	//実行コマンドを受け取る
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(bufio.ScanLines)
 	grsh.Executer = &server.Executer{Scanner: scanner, Observer: channel}
+
+	//waitSignal
+	//CTRL + C
+	go grsh.waitSignal(cancel, listener)
 
 	//通知を待つ
 	go grsh.Observer.WaitNotice(context)
