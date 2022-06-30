@@ -5,11 +5,13 @@ import (
 	"errors"
 	"io"
 	"log"
+	"sync"
 )
 
 type Receiver struct {
 	Client   *Client
 	Observer chan<- Notification
+	Lock     *sync.Mutex
 }
 
 func (receiver Receiver) Start(ctx context.Context) {

