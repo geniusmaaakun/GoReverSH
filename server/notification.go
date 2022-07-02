@@ -1,5 +1,7 @@
 package server
 
+import "GoReverSH/utils"
+
 type NotificationType int
 
 const (
@@ -11,11 +13,15 @@ const (
 	DOWNLOAD
 	SCREEN_SHOT
 	CLEAN
+	CREATE_FILE
+	MAKE_DIR
+	CLIST
+	CSWITCH
 )
 
 type Notification struct {
 	Type    NotificationType
 	Client  *Client
-	Message string
+	Output  utils.Output
 	Command string
 }

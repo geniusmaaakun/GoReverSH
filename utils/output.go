@@ -6,16 +6,16 @@ const (
 	MESSAGE OutputType = iota
 	FILE
 	DIR
-	FIN
 )
+
+type Output struct {
+	Type    OutputType
+	Message []byte
+	FileInfo
+}
 
 type FileInfo struct {
 	Name string
+	Body []byte
 	Size int64
-}
-
-type Output struct {
-	Type OutputType
-	Body string
-	FileInfo
 }

