@@ -9,6 +9,17 @@ get currentuser
 
 color
 
+clean
+
+config
+
+test
+
+Refactoring
+
+暗号化
+TLS -> AES共通鍵
+
 
 その他
 ゴルーチンリークを注意

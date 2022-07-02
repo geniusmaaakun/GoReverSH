@@ -131,11 +131,21 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 				observer.printPrompt()
 
 			case CLIST:
-				fmt.Println("clist")
+				for _, c := range observer.State.ClientMap {
+					fmt.Println(c)
+				}
 				observer.printPrompt()
 
 			case CSWITCH:
-				fmt.Println("cswitch")
+				fmt.Println("before:", observer.Sender.connectingClient)
+				clientName := strings.Split(notice.Command, " ")[1]
+				client, ok := observer.State.ClientMap[clientName]
+				if ok {
+					observer.Sender.connectingClient = client
+					fmt.Println("aftre:", observer.Sender.connectingClient)
+				} else {
+					fmt.Println("not found")
+				}
 				observer.printPrompt()
 
 			case CLEAN:
@@ -151,7 +161,7 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 
 func (o Observer) printPrompt() {
 	if o.Sender.connectingClient != nil {
-		fmt.Printf("\n[GoReverSH@%s] >", o.Sender.connectingClient.Name)
+		fmt.Printf("\n[GoReverSH@%s]>", o.Sender.connectingClient.Name)
 	} else {
 		fmt.Println("wait...")
 	}

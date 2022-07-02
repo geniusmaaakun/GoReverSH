@@ -372,7 +372,7 @@ func main() {
 	config := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	//config := &tls.Config{InsecureSkipVerify: true}
 
-	server := flag.String("server", "", "ipaddr")
+	server := flag.String("server", "", "target ipaddr")
 	port := flag.String("port", "8000", "port")
 	flag.Parse()
 
