@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -48,6 +46,7 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 				observer.printPrompt()
 
 			case COMMAND:
+				//stdoutしないコマンドでもプロンプトが表示されてしまう
 				observer.Sender.SendMessage(notice.Command)
 				observer.printPrompt()
 
@@ -60,12 +59,11 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 				fmt.Println("UPLOAD")
 				observer.printPrompt()
 
-				//29
 			case DOWNLOAD:
 				fmt.Println("DOWNLOAD")
+				observer.Sender.SendMessage(notice.Command)
 				observer.printPrompt()
 
-				//28
 			case SCREEN_SHOT:
 				fmt.Println("SCREENSHOT")
 				observer.Sender.SendMessage(notice.Command)
@@ -88,12 +86,11 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 					log.Println(err)
 					continue
 				}
-				f.WriteString(string(notice.Output.FileInfo.Body))
+				_, err = f.WriteString(string(notice.Output.FileInfo.Body))
+				if err != nil {
+					log.Println(err)
+				}
 				f.Close()
-				observer.printPrompt()
-
-			case MAKE_DIR:
-				fmt.Println("make dir")
 				observer.printPrompt()
 
 				//30
@@ -114,101 +111,4 @@ func (o Observer) printPrompt() {
 	} else {
 		fmt.Println("wait...")
 	}
-}
-
-//先にサイズを受け取る
-//サイズ分のバッファを確保
-//読み込む
-//バッファ分読み込んだら、次のファイル
-//サイズ0、名前空、中身なしの場合終了
-func downloadFiles(conn net.Conn) error {
-	for {
-		fmt.Println(1)
-		bufferFileName := make([]byte, 64)
-		bufferFileSize := make([]byte, 10)
-		conn.Read(bufferFileSize)
-		fmt.Println(string(bufferFileSize))
-		fileSize, _ := strconv.ParseInt(strings.Trim(string(bufferFileSize), ":"), 10, 64)
-
-		if fileSize == 0 {
-			//break
-		}
-
-		fmt.Println(2)
-		conn.Read(bufferFileName)
-		fileName := strings.Trim(string(bufferFileName), ":")
-
-		fmt.Println(fileName, fileSize)
-		/*
-			fileInfoBuff := make([]byte, 1024)
-			fmt.Println(1)
-			n, err := conn.Read(fileInfoBuff)
-			fmt.Println(1)
-			fmt.Println(1)
-			output := utils.Output{}
-			fmt.Println(n)
-			if err != nil {
-				log.Fatalln(err)
-				break
-			}
-
-			fmt.Println(2)
-			data := strings.Trim(string(fileInfoBuff[:n]), ":")
-
-			//err := json.NewDecoder(conn).Decode(&output)
-			fmt.Println("data:", string(data))
-			err = json.Unmarshal([]byte(data), &output)
-			if err != nil {
-				log.Fatalln(err)
-				break
-			}
-			fmt.Println(output)
-
-			if output.Type == utils.FIN {
-				break
-			}
-
-			fmt.Println(3)
-		*/
-
-		/*
-			//TODO 出力フォルダは設定ファイルに記載
-			outdir := "./output/"
-			f, err := os.Create(outdir + output.FileInfo.Name)
-			if err != nil {
-				log.Fatalln(err)
-				break
-			}
-
-			fmt.Println(4)
-
-			var content []byte
-			buff := make([]byte, 1024)
-			size := 0
-
-			for int64(size) < output.FileInfo.Size {
-				n, err := conn.Read(buff)
-				if err != nil {
-					break
-				}
-				tmp := make([]byte, 0, size+n)
-				tmp = append(content[:size], buff[:n]...)
-				content = tmp
-				size += n
-			}
-		*/
-
-		//fileInfoのWriteが消されてしまう
-		/*
-			_, err = io.Copy(f, conn)
-			if err != nil {
-				break
-			}
-		*/
-		fmt.Println(4)
-
-		//f.Close()
-		fmt.Println("Close")
-	}
-	return nil
 }

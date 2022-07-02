@@ -77,8 +77,6 @@ func (receiver Receiver) WaitMessage(ctx context.Context) error {
 				output.FileInfo.Body = base64ToImage
 				//fmt.Println(string(base64ToImage))
 				receiver.Observer <- Notification{Type: CREATE_FILE, Client: receiver.Client, Output: output}
-			case utils.DIR:
-				//Type MakeDIr
 
 			}
 

@@ -5,7 +5,6 @@ type OutputType int
 const (
 	MESSAGE OutputType = iota
 	FILE
-	DIR
 )
 
 type Output struct {
