@@ -22,9 +22,9 @@ func (e Executer) WaitCommand(ctx context.Context) error {
 			commands := strings.Split(e.Scanner.Text(), " ")
 			switch commands[0] {
 			case "clist":
-
+				e.Observer <- Notification{Type: CLIST, Command: e.Scanner.Text()}
 			case "cswitch":
-
+				e.Observer <- Notification{Type: CSWITCH, Command: e.Scanner.Text()}
 			case "upload":
 				e.Observer <- Notification{Type: UPLOAD, Command: e.Scanner.Text()}
 			case "download":

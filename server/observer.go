@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -54,9 +56,44 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 				fmt.Printf("\n%s\n", notice.Output.Message)
 				observer.printPrompt()
 
-				//30
 			case UPLOAD:
 				fmt.Println("UPLOAD")
+				commands := strings.Split(notice.Command, " ")
+				observer.Sender.SendMessage(notice.Command)
+				file, err := os.Open(commands[len(commands)-1])
+				if err != nil {
+					log.Println(err)
+					break
+				}
+
+				//read
+				//最終的な入れ物
+				var content []byte
+				//読み込むもの
+				buf := make([]byte, 1024)
+				//読み込む位置
+				size := 0
+				for {
+					//ファイルを読み込む
+					n, err := file.Read(buf)
+					if err != nil {
+						if n == 0 || err == io.EOF {
+							break
+						}
+						log.Println(err)
+						break
+					}
+					//content + bufの中身を一時的に保存。
+					tmp := make([]byte, 0, size+n)
+					tmp = append(content[:size], buf[:n]...)
+					content = tmp
+					size += n
+				}
+
+				file.Close()
+				//fmt.Println(string(content))
+				dataToBase64 := base64.StdEncoding.EncodeToString(content)
+				observer.Sender.SendMessage(dataToBase64)
 				observer.printPrompt()
 
 			case DOWNLOAD:
@@ -93,7 +130,14 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 				f.Close()
 				observer.printPrompt()
 
-				//30
+			case CLIST:
+				fmt.Println("clist")
+				observer.printPrompt()
+
+			case CSWITCH:
+				fmt.Println("cswitch")
+				observer.printPrompt()
+
 			case CLEAN:
 				fmt.Println("CLEAN")
 				observer.printPrompt()
