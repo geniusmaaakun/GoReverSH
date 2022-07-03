@@ -1,7 +1,7 @@
 # GoReverSH
 Golang ReverseShell
 
-##
+## other en@ble@ny
 
 ## TODO
 get hostname
@@ -11,13 +11,15 @@ color
 
 clean
 
-config
-
 test
 
 Refactoring
 
-Makefile
+リトライ
+サイズ、パーミッション
+別プログラムに偽装
+管理権限
+
 
 暗号化
 TLS -> AES共通鍵
