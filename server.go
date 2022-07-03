@@ -16,6 +16,7 @@ import (
 	"sync"
 )
 
+//TODO 切り出す
 type GoReverSH struct {
 	signalCh chan os.Signal
 	op       Option

@@ -4,5 +4,7 @@ import "testing"
 
 func TestNewConfig(t *testing.T) {
 	InitConfig()
-	t.Log(Config)
+	if Config.DownloadOutDir == "" || Config.ScreenshotDir == "" || Config.UploadDIr == "" {
+		t.Errorf("configlist params not setting. got: %+v\n", Config)
+	}
 }
