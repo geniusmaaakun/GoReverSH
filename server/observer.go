@@ -1,6 +1,7 @@
 package server
 
 import (
+	"GoReverSH/config"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -109,7 +110,8 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 			case CREATE_FILE:
 				filePath := strings.Split(notice.Output.FileInfo.Name, "/")
 				lastPathFromRecievedFile := strings.Join(filePath[:len(filePath)-1], "/")
-				outdir := "./output/" + notice.Client.Name + "/" //config
+				//outdir := "./output/" + notice.Client.Name + "/" //config
+				outdir := config.Config.DownloadOutDir + notice.Client.Name + "/" //config
 
 				//dir作成
 				if _, err := os.Stat(outdir + lastPathFromRecievedFile); os.IsNotExist(err) {
@@ -150,6 +152,7 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 
 			case CLEAN:
 				fmt.Println("CLEAN")
+				observer.Sender.SendMessage(notice.Command)
 				observer.printPrompt()
 
 			default:

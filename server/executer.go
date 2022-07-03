@@ -32,7 +32,7 @@ func (e Executer) WaitCommand(ctx context.Context) error {
 			case "screenshot":
 				e.Observer <- Notification{Type: SCREEN_SHOT, Command: e.Scanner.Text()}
 			case "clean_go_reversh":
-				e.Observer <- Notification{Type: CLEAN}
+				e.Observer <- Notification{Type: CLEAN, Command: e.Scanner.Text()}
 			default:
 				e.Observer <- Notification{Type: COMMAND, Command: e.Scanner.Text()}
 			}

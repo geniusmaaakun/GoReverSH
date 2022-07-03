@@ -1,6 +1,7 @@
 package main
 
 import (
+	"GoReverSH/config"
 	"GoReverSH/server"
 	"GoReverSH/utils"
 	"bufio"
@@ -69,10 +70,10 @@ func (grsh *GoReverSH) run() error {
 	}
 
 	//startserver
-	config := tls.Config{
+	tlsConfig := tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}
-	listener, err := tls.Listen("tcp", net.JoinHostPort(grsh.op.host, grsh.op.port), &config)
+	listener, err := tls.Listen("tcp", net.JoinHostPort(grsh.op.host, grsh.op.port), &tlsConfig)
 	if err != nil {
 		return fmt.Errorf("Listen error: %+w\n", err)
 	}
@@ -147,6 +148,9 @@ func main() {
 	flag.Parse()
 
 	fmt.Println(*host, *port)
+
+	config.InitConfig()
+	fmt.Println(config.Config)
 
 	grsh := NewGoReverSH(*host, *port)
 	err := grsh.run()
