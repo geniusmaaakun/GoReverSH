@@ -39,6 +39,11 @@ func TestWaitCommand(t *testing.T) {
 		want    error
 	}{
 		{"clist", "clist", nil},
+		{"cswitch", "cswitch", nil},
+		{"upload", "upload", nil},
+		{"download", "download", nil},
+		{"screenshot", "screenshot", nil},
+		{"clean", "clean_go_reversh", nil},
 	}
 
 	for _, tt := range tests {
