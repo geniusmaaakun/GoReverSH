@@ -20,6 +20,19 @@ type Observer struct {
 	Lock           *sync.Mutex
 }
 
+func NewObserver(channel chan Notification, lock *sync.Mutex) *Observer {
+	state := State{ClientMap: make(map[string]*Client)}
+	observer := &Observer{State: state, Subject: channel, PromptViewFlag: false, Lock: lock}
+	return observer
+}
+
+func (o *Observer) JoinClient(client *Client) {
+	o.State.ClientMap[client.Name] = client
+	if o.Sender.connectingClient == nil {
+		o.Sender.connectingClient = client
+	}
+}
+
 //受け取った通知の種別によってメッセージの送信, あるいはメンバーの追加/削除を行います
 func (observer Observer) WaitNotice(ctx context.Context) error {
 	for {

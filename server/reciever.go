@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"log"
+	"net"
 	"sync"
 )
 
@@ -13,6 +14,15 @@ type Receiver struct {
 	Client   *Client
 	Observer chan<- Notification
 	Lock     *sync.Mutex
+}
+
+func NewReceiver(conn net.Conn, name string, channel chan Notification, lock *sync.Mutex) *Receiver {
+	client := NewClient(conn, name)
+
+	//受信を待つ
+	//read & join
+	receiver := &Receiver{Client: client, Observer: channel, Lock: lock}
+	return receiver
 }
 
 func (receiver Receiver) Start(ctx context.Context) {

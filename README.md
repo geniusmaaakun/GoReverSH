@@ -4,6 +4,10 @@ Golang ReverseShell
 ## other en@ble@ny
 
 ## TODO
+makefile
+変数　ビルドファイル名など
+
+
 get hostname
 get currentuser
 

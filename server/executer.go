@@ -4,12 +4,21 @@ import (
 	"bufio"
 	"context"
 	"log"
+	"os"
 	"strings"
 )
 
 type Executer struct {
 	Scanner  *bufio.Scanner
 	Observer chan<- Notification
+}
+
+func NewExecuter(channel chan Notification) *Executer {
+	//実行コマンドを受け取る
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Split(bufio.ScanLines)
+	executer := &Executer{Scanner: scanner, Observer: channel}
+	return executer
 }
 
 func (e Executer) WaitCommand(ctx context.Context) error {
