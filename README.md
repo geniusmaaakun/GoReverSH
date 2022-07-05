@@ -20,10 +20,11 @@ test
 
 Refactoring
 
-upload
+upload　土日
     dir対応
     downloadを逆にする。
     クライアント側もオブザーバーパターンにする方がいい
+    outをデコード　
 
 サイズ、パーミッション
 

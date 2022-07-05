@@ -326,6 +326,7 @@ func runShell(conn net.Conn) error {
 
 			//clean flagをつけて、正常終了
 			//その後、コマンドでファイルを全消去する
+			//sleep 5 && rm .
 
 			os.Exit(0)
 

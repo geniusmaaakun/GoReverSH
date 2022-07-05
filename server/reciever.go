@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"io"
 	"log"
 	"net"
 	"sync"
@@ -18,9 +20,6 @@ type Receiver struct {
 
 func NewReceiver(conn net.Conn, name string, channel chan Notification, lock *sync.Mutex) *Receiver {
 	client := NewClient(conn, name)
-
-	//受信を待つ
-	//read & join
 	receiver := &Receiver{Client: client, Observer: channel, Lock: lock}
 	return receiver
 }
@@ -93,7 +92,10 @@ func (receiver Receiver) WaitMessage(ctx context.Context) error {
 			output := utils.Output{}
 			err := json.NewDecoder(receiver.Client.Conn).Decode(&output)
 			if err != nil {
-				receiver.Observer <- Notification{Type: DEFECT, Client: receiver.Client}
+				if errors.Is(err, io.EOF) {
+					receiver.Observer <- Notification{Type: DEFECT, Client: receiver.Client}
+					return err
+				}
 				log.Println(err)
 				return err
 			}
