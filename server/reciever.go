@@ -93,7 +93,9 @@ func (receiver Receiver) WaitMessage(ctx context.Context) error {
 			output := utils.Output{}
 			err := json.NewDecoder(receiver.Client.Conn).Decode(&output)
 			if err != nil {
+				receiver.Observer <- Notification{Type: DEFECT, Client: receiver.Client}
 				log.Println(err)
+				return err
 			}
 
 			switch output.Type {

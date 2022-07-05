@@ -40,7 +40,7 @@ func (e Executer) WaitCommand(ctx context.Context) error {
 				e.Observer <- Notification{Type: DOWNLOAD, Command: e.Scanner.Text()}
 			case "screenshot":
 				e.Observer <- Notification{Type: SCREEN_SHOT, Command: e.Scanner.Text()}
-			case "clean_go_reversh":
+			case "clean_sh":
 				e.Observer <- Notification{Type: CLEAN, Command: e.Scanner.Text()}
 			default:
 				e.Observer <- Notification{Type: COMMAND, Command: e.Scanner.Text()}

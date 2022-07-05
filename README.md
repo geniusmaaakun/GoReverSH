@@ -14,6 +14,7 @@ get currentuser
 color
 
 clean
+    ファイル全削除
 
 test
 

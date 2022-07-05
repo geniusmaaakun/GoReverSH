@@ -1,4 +1,8 @@
 package server
 
+import "testing"
+
 //通常通り
-func 
+func TestNewReceiver(t *testing.T) {
+
+}

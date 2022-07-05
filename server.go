@@ -4,7 +4,6 @@ import (
 	"GoReverSH/config"
 	"GoReverSH/server"
 	"GoReverSH/utils"
-	"bufio"
 	"context"
 	"crypto/tls"
 	"flag"
@@ -36,6 +35,16 @@ func NewGoReverSH(host, port string) *GoReverSH {
 	op := Option{host, port}
 	lock := sync.Mutex{}
 	return &GoReverSH{signalCh: sigCH, op: op, lock: &lock}
+}
+
+func (grsh *GoReverSH) FreeClientMap(client server.Client) bool {
+	c, ok := grsh.Observer.State.ClientMap[client.Name]
+	if c != nil && ok {
+		grsh.Observer.State.ClientMap[c.Name].Conn.Close()
+		delete(grsh.Observer.State.ClientMap, c.Name)
+		return true
+	}
+	return false
 }
 
 func (grsh *GoReverSH) FreeAllClientMap() bool {
@@ -91,12 +100,18 @@ func (grsh *GoReverSH) run() error {
 	//TODO NewObserver, NewExecuter
 	//TODO lockを渡す
 	//通知を受け取る
-	state := server.State{ClientMap: make(map[string]*server.Client)}
-	grsh.Observer = &server.Observer{State: state, Subject: channel, PromptViewFlag: false, Lock: grsh.lock}
+	/*
+		state := server.State{ClientMap: make(map[string]*server.Client)}
+		grsh.Observer = &server.Observer{State: state, Subject: channel, PromptViewFlag: false, Lock: grsh.lock}
+	*/
+	grsh.Observer = server.NewObserver(channel, grsh.lock)
 	//実行コマンドを受け取る
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Split(bufio.ScanLines)
-	grsh.Executer = &server.Executer{Scanner: scanner, Observer: channel}
+	/*
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Split(bufio.ScanLines)
+		grsh.Executer = &server.Executer{Scanner: scanner, Observer: channel}
+	*/
+	grsh.Executer = server.NewExecuter(channel)
 
 	//waitSignal
 	//CTRL + C

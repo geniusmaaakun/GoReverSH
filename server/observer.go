@@ -33,6 +33,16 @@ func (o *Observer) JoinClient(client *Client) {
 	}
 }
 
+func (o *Observer) FreeClientMap(client Client) bool {
+	c, ok := o.State.ClientMap[client.Name]
+	if c != nil && ok {
+		o.State.ClientMap[c.Name].Conn.Close()
+		delete(o.State.ClientMap, c.Name)
+		return true
+	}
+	return false
+}
+
 //受け取った通知の種別によってメッセージの送信, あるいはメンバーの追加/削除を行います
 func (observer Observer) WaitNotice(ctx context.Context) error {
 	for {
@@ -59,6 +69,7 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 						break
 					}
 				}
+				observer.Sender.connectingClient = nil
 				observer.printPrompt()
 
 			case COMMAND:
@@ -166,7 +177,6 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 			case CLEAN:
 				fmt.Println("CLEAN")
 				observer.Sender.SendMessage(notice.Command)
-				observer.printPrompt()
 
 			default:
 				log.Println(notice)
