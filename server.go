@@ -37,16 +37,6 @@ func NewGoReverSH(host, port string) *GoReverSH {
 	return &GoReverSH{signalCh: sigCH, op: op, lock: &lock}
 }
 
-func (grsh *GoReverSH) FreeClientMap(client server.Client) bool {
-	c, ok := grsh.Observer.State.ClientMap[client.Name]
-	if c != nil && ok {
-		grsh.Observer.State.ClientMap[c.Name].Conn.Close()
-		delete(grsh.Observer.State.ClientMap, c.Name)
-		return true
-	}
-	return false
-}
-
 func (grsh *GoReverSH) FreeAllClientMap() bool {
 	for _, c := range grsh.Observer.State.ClientMap {
 		c.Conn.Close()

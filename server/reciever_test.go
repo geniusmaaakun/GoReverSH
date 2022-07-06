@@ -26,14 +26,18 @@ func TestNewReceiver(t *testing.T) {
 }
 
 func TestWaitMessage(t *testing.T) {
-	server, client := net.Pipe()
-	ch := make(chan Notification)
-
-	r := NewReceiver(client, "test", ch, &sync.Mutex{})
-
-	if r == nil {
-		t.Errorf("NewReceiver error. got %v\n", r)
+	//server, client := net.Pipe()
+	l, err := net.Listen("tcp", ":3000")
+	if err != nil {
+		t.Fatal(err)
 	}
+	defer l.Close()
+
+	clientConn, err := net.Dial("tcp", ":3000")
+	if err != nil {
+		t.Error(err)
+	}
+	defer clientConn.Close()
 
 	tests := []struct {
 		name          string
@@ -48,26 +52,41 @@ func TestWaitMessage(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			ctx := context.Background()
 
-			go func() {
-				err := r.WaitMessage(ctx)
-
-				//エラーがある、かつ期待通り
-				if err != nil && tt.errorExpected {
-					t.Errorf("wantError %v, got %v\n", tt.errorExpected, err)
+			for {
+				conn, err := l.Accept()
+				if err != nil {
+					return
 				}
-			}()
+				defer conn.Close()
 
-			//test
-			//output形式とそうじゃない形式のテスト
-			//出力関数を作成
-			client.Write(tt.writeData)
+				ch := make(chan Notification)
+				r := NewReceiver(conn, "test", ch, &sync.Mutex{})
+				if r == nil {
+					t.Errorf("NewReceiver error. got %v\n", r)
+				}
+				ctx := context.Background()
+
+				go func() {
+					err := r.WaitMessage(ctx)
+
+					//エラーがある、かつ期待通り
+					if err != nil && tt.errorExpected {
+						t.Errorf("wantError %v, got %v\n", tt.errorExpected, err)
+					}
+				}()
+
+				//test
+				//output形式とそうじゃない形式のテスト
+				//出力関数を作成
+				_, err = clientConn.Write(tt.writeData)
+				if err != nil {
+					t.Error(err)
+				}
+			}
 		})
 	}
 
-	server.Close()
-	client.Close()
 }
 
 func genOutput(output utils.Output) []byte {
