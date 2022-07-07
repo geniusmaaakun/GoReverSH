@@ -38,6 +38,10 @@ func (o *Observer) joinClient(client *Client) {
 }
 
 func (o *Observer) defectClient(client *Client) {
+	if client == nil {
+		return
+	}
+
 	fmt.Println("Connection Close")
 	/*
 		client.Conn.Close()
@@ -58,6 +62,9 @@ func (o *Observer) defectClient(client *Client) {
 
 func (o *Observer) execUpload(notice Notification) {
 	commands := strings.Split(notice.Command, " ")
+	if len(commands) != 2 {
+		return
+	}
 	o.Sender.SendMessage(notice.Command)
 	file, err := os.Open(commands[len(commands)-1])
 	if err != nil {
@@ -127,8 +134,12 @@ func (o *Observer) execClientlist() {
 }
 
 func (o *Observer) execClientSwitch(notice Notification) {
+	commands := strings.Split(notice.Command, " ")
+	if len(commands) != 2 {
+		return
+	}
 	fmt.Println("before:", o.Sender.connectingClient)
-	clientName := strings.Split(notice.Command, " ")[1]
+	clientName := commands[1]
 	client, ok := o.State.ClientMap[clientName]
 	if ok {
 		o.Sender.connectingClient = client
