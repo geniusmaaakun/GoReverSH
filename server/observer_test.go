@@ -2,8 +2,14 @@ package server
 
 import (
 	"GoReverSH/server/mock"
+	"GoReverSH/utils"
 	"context"
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -81,8 +87,40 @@ func TestUpload(t *testing.T) {
 
 //createfile
 func TestCreatefile(t *testing.T) {
-	//testdataに作成し、削除
-	//outdirをが引数で指定
+	// 一時領域にディレクトリを生成する
+	tmp, err := ioutil.TempDir("", "sample")
+	if err != nil {
+		t.Errorf("failed: %v", err)
+	}
+	// 最後に消す
+	defer os.RemoveAll(tmp)
+
+	ch := make(chan Notification)
+	o := NewObserver(ch, &sync.Mutex{})
+
+	fileinfo := utils.FileInfo{Name: "aaa.txt", Body: []byte("aaaaa"), Size: 5}
+
+	output := utils.Output{Type: utils.OutputType(CREATE_FILE)}
+	base64ToBody, err := base64.StdEncoding.DecodeString(string(output.Body))
+	if err != nil {
+		log.Println(err)
+	}
+	output.FileInfo = fileinfo
+	output.FileInfo.Body = base64ToBody
+	notice := Notification{Type: CREATE_FILE, Client: &Client{mock.ConnMock{}, "test", "test"}, Output: output}
+
+	// tmpのサブディレクトリとしてディレクトリ生成を含んだテストを行う
+	src := filepath.Join(tmp, output.Name)
+	//o.execCreateFile(notice, tmp+output.Name)
+	o.execCreateFile(notice, src)
+
+	// ファイルの存在確認
+	_, err = os.Stat(src)
+	//_, err = os.Stat(tmp + output.Name)
+	if os.IsNotExist(err) {
+		t.Errorf("failed: %v", err)
+	}
+
 }
 
 //map 出力テストは順番が変わるため難しい

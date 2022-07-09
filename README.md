@@ -3,6 +3,12 @@ Golang ReverseShell
 
 ## other en@ble@ny
 
+## 未実装
+### Test
+TestWaitNotice
+TestClist
+
+
 ## TODO
 makefile
 変数　ビルドファイル名など

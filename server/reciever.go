@@ -8,7 +8,6 @@ import (
 	"errors"
 	"io"
 	"log"
-	"net"
 	"sync"
 )
 
@@ -18,8 +17,7 @@ type Receiver struct {
 	Lock     *sync.Mutex
 }
 
-func NewReceiver(conn net.Conn, name string, channel chan Notification, lock *sync.Mutex) *Receiver {
-	client := NewClient(conn, name)
+func NewReceiver(client *Client, channel chan Notification, lock *sync.Mutex) *Receiver {
 	receiver := &Receiver{Client: client, Observer: channel, Lock: lock}
 	return receiver
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"GoReverSH/server/mock"
 	"GoReverSH/utils"
 	"context"
 	"encoding/json"
@@ -11,18 +12,15 @@ import (
 
 //通常通り
 func TestNewReceiver(t *testing.T) {
-	server, client := net.Pipe()
+	c := NewClient(mock.ConnMock{}, "test")
 	ch := make(chan Notification)
 
-	r := NewReceiver(client, "test", ch, &sync.Mutex{})
+	r := NewReceiver(c, ch, &sync.Mutex{})
 
 	if r == nil {
 		t.Errorf("NewReceiver error. got %v\n", r)
 	}
 
-	server.Close()
-
-	client.Close()
 }
 
 func TestWaitMessage(t *testing.T) {
@@ -60,8 +58,10 @@ func TestWaitMessage(t *testing.T) {
 				}
 				defer conn.Close()
 
+				c := NewClient(conn, "test")
+
 				ch := make(chan Notification)
-				r := NewReceiver(conn, "test", ch, &sync.Mutex{})
+				r := NewReceiver(c, ch, &sync.Mutex{})
 				if r == nil {
 					t.Errorf("NewReceiver error. got %v\n", r)
 				}
