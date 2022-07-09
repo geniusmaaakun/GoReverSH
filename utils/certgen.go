@@ -14,8 +14,6 @@ import (
 	"time"
 )
 
-//後で解読する
-
 var (
 	certsPath      = "certs"
 	certName       = "serverCert.pem"
@@ -186,6 +184,7 @@ func GenClientCerts() (certFile, keyFile string, err error) {
 	return certFile, keyFile, nil
 }
 
+//保存関数
 func saveKey(fileName string, key *ecdsa.PrivateKey) (string, error) {
 	fileName = filepath.Join(certsPath, fileName)
 	file, err := os.Create(fileName)
