@@ -2,9 +2,11 @@ package server
 
 import (
 	"GoReverSH/server/mock"
+	"context"
 	"fmt"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestNewObserver(t *testing.T) {
@@ -151,6 +153,16 @@ func TestFreeMap(t *testing.T) {
 	o.joinClient(clients[1])
 	o.joinClient(clients[2])
 	o.joinClient(clients[3])
+
+	for _, c := range clients {
+		isFree := o.FreeClientMap(*c)
+		if !isFree {
+			t.Errorf("cannot free cient: %v\n", c)
+		}
+	}
+	if len(o.State.ClientMap) > 0 {
+		t.Error("Could not free")
+	}
 }
 
 //printPrompt
@@ -167,10 +179,22 @@ func TestPrintPrompt(t *testing.T) {
 	o.joinClient(clients[1])
 	o.joinClient(clients[2])
 	o.joinClient(clients[3])
+
+	want := "\n[GoReverSH@test]>"
+	got, _ := captureStdout(t, func() error { o.printPrompt(); return nil })
+	if want != got {
+		t.Errorf("want: %v, got: %v\n", want, got)
+	}
 }
 
-//waitnotice
+//waitnotice 無限ループの関数をテストどうやってする？
+//未完成
 func TestWaitNotice(t *testing.T) {
+	const (
+		Exec = "Exec"
+		Res  = "Res"
+	)
+
 	ch := make(chan Notification)
 	o := NewObserver(ch, &sync.Mutex{})
 	clients := []*Client{
@@ -180,10 +204,58 @@ func TestWaitNotice(t *testing.T) {
 		{mock.ConnMock{}, "test3", "test3"},
 	}
 	o.joinClient(clients[0])
-	o.joinClient(clients[1])
-	o.joinClient(clients[2])
-	o.joinClient(clients[3])
+
+	//実行コマンドを受け取る
+	/*
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Split(bufio.ScanLines)
+		grsh.Executer = &server.Executer{Scanner: scanner, Observer: channel}
+	*/
+	ctx := context.Background()
+	//ctx, cancel := context.WithCancel(ctx)
+
+	executer := NewExecuter(ch)
+
+	receiver := &Receiver{Client: clients[0], Observer: ch, Lock: &sync.Mutex{}}
+
+	go executer.WaitCommand(ctx)
+
+	go receiver.WaitMessage(ctx)
+
+	tests := []struct {
+		name   string
+		Type   string //receiver or executer
+		notice Notification
+	}{
+		{"join", Res, Notification{Type: JOIN, Client: clients[1]}},
+	}
+
+	defaultMessage := ""
+
+	var out string
+	go func() {
+		out, _ = captureStdout(t, func() error { o.WaitNotice(ctx); return nil })
+		if out == defaultMessage {
+			t.Error()
+		}
+	}()
 
 	//senderをmock
 	//test case pattern all
+	for _, tt := range tests {
+		//tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			//t.Parallel()
+			//コマンドが機能しているかどうか
+			if tt.Type == Exec {
+				executer.Observer <- tt.notice
+			} else if tt.Type == Res {
+				receiver.Observer <- tt.notice
+			}
+
+			time.Sleep(1 * time.Second)
+		})
+	}
+
+	//t.Log(out)
 }

