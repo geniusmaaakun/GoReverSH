@@ -13,17 +13,17 @@ import (
 	"strings"
 )
 
-func SendFile(filenames []string, conn net.Conn) {
+func SendFile(filenames []string, conn net.Conn) error {
 	for _, fname := range filenames {
 		//sendfile args fname
 		f, err := os.Open(fname)
 		if err != nil {
-			break
+			return err
 		}
 
 		fstats, err := f.Stat()
 		if err != nil {
-			break
+			return err
 		}
 
 		filePath := strings.Split(fname, "/")
@@ -65,4 +65,5 @@ func SendFile(filenames []string, conn net.Conn) {
 
 		f.Close()
 	}
+	return nil
 }
