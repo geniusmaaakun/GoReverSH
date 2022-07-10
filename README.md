@@ -1,30 +1,35 @@
 # GoReverSH
 Golang ReverseShell
+other en@ble@ny
 
-## other en@ble@ny
+# 詳細
+
+# 使い方
+
+
 
 ## 未実装
 ### Test
 TestWaitNotice
 TestClist
+Cert
+
+### 関数
+get hostname
+get currentuser
 
 
 ## TODO
 makefile
 変数　ビルドファイル名など
 
-
-get hostname
-get currentuser
+ReadMe
 
 color
 
 clean
     ファイル全削除
 
-test
-
-Refactoring
 
 upload　土日
     dir対応
@@ -32,12 +37,14 @@ upload　土日
     クライアント側もオブザーバーパターンにする方がいい
     outをデコード　
 
-サイズ、パーミッション
+
+ダウンロード
+    サイズ、パーミッション
 
 出力ディレクトリ変更コマンド
 
 
-別プログラムに偽装
+別プログラムに偽装　バッチファイルなど
 管理権限
 
 
@@ -45,29 +52,24 @@ upload　土日
 TLS -> AES共通鍵
 
 
-その他
+## その他
 ゴルーチンリークを注意
-
-dockerでテスト
-
-テストコード
 
 build op make　でmainの変数に代入
 
 操作ログを残す
 logfile
 
-チャネルを使って、オブザーバーパターンで処理を分ける方がわかりやすい
-
-killシグナルでクリーン終了
 
 ダウンロードなどは、コネクション二つ貼ってやる方法もあり？
 制御コマンド用と通信用
+
 
 暗号化
 base64でキーを埋め込み　RSA AESで暗号化
 暗号文.共通鍵をサーバー側の秘密鍵で暗号化
 クライアントは、公開鍵を受け取り複合化する
+
 
 TLSを使う？
 実際は証明書を発行しないので、独自に暗号化する必要がある
