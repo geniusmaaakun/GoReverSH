@@ -217,10 +217,15 @@ func RunShell(conn net.Conn) error {
 			//execCleanSh
 			//tips/main11.goを参考
 			fmt.Println("CLEAN")
-
+			err := ExecClean()
+			if err != nil {
+				log.Println(err)
+			}
 			//clean flagをつけて、正常終了
 			//その後、コマンドでファイルを全消去する
 			//sleep 5 && rm .
+
+			conn.Close()
 
 			os.Exit(0)
 
