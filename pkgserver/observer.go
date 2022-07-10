@@ -1,4 +1,4 @@
-package server
+package pkgserver
 
 import (
 	"GoReverSH/config"
@@ -141,6 +141,7 @@ func (o *Observer) execUpload(notice Notification) error {
 		return nil
 	*/
 
+	//TODO: dirならzipにして送信
 	commands := strings.Split(notice.Command, " ")
 	if len(commands) != 2 {
 		return errors.New("command len is mnot 2")

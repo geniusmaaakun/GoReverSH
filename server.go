@@ -2,7 +2,7 @@ package main
 
 import (
 	"GoReverSH/config"
-	"GoReverSH/server"
+	"GoReverSH/pkgserver"
 	"errors"
 	"flag"
 	"fmt"
@@ -22,7 +22,7 @@ func main() {
 
 	fmt.Println(*host, *port)
 
-	grsh := server.NewGoReverSH(*host, *port)
+	grsh := pkgserver.NewGoReverSH(*host, *port)
 	if grsh == nil || reflect.ValueOf(grsh).IsNil() {
 		log.Fatalln(errors.New("GoReverSh constructor error"))
 	}

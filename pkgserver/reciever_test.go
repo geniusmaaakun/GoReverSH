@@ -1,7 +1,7 @@
-package server
+package pkgserver
 
 import (
-	"GoReverSH/server/mock"
+	"GoReverSH/pkgserver/mock"
 	"GoReverSH/utils"
 	"context"
 	"encoding/json"

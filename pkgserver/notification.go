@@ -1,4 +1,4 @@
-package server
+package pkgserver
 
 import "GoReverSH/utils"
 
