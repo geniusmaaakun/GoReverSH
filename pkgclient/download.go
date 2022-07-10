@@ -21,8 +21,6 @@ func ExecDownload(rootPath string, conn net.Conn) error {
 			return errors.New("failed filepath.Walk: " + err.Error())
 		}
 		if d.IsDir() {
-			log.Println(1)
-
 			return nil
 		}
 
