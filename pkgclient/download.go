@@ -17,7 +17,6 @@ func ExecDownload(rootPath string, conn net.Conn) error {
 	fsys := os.DirFS(rootPath)
 	err := fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			log.Println(err)
 			return errors.New("failed filepath.Walk: " + err.Error())
 		}
 		if d.IsDir() {
@@ -26,15 +25,11 @@ func ExecDownload(rootPath string, conn net.Conn) error {
 
 		f, err := os.Open(rootPath + "/" + path)
 		if err != nil {
-			log.Println(err)
-
 			return err
 		}
 
 		fstats, err := f.Stat()
 		if err != nil {
-			log.Println(err)
-
 			return err
 		}
 
@@ -76,7 +71,6 @@ func ExecDownload(rootPath string, conn net.Conn) error {
 		return nil
 	})
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	return nil

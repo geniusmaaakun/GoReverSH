@@ -39,7 +39,6 @@ func ExecUpload(fileName string, conn net.Conn) error {
 			if n == 0 || err == io.EOF {
 				break
 			}
-			log.Println(err)
 			break
 		}
 		//content + bufの中身を一時的に保存。
@@ -63,12 +62,10 @@ func ExecUpload(fileName string, conn net.Conn) error {
 	_, err = file.Write(base64ToData)
 	if err != nil {
 		file.Close()
-		log.Println(err)
 		return err
 	}
 	err = file.Close()
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
