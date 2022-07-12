@@ -1,6 +1,5 @@
 # GoReverSH
-[![ソースコードサイズ](https://img.shields.io/github/repo-size/geniusmaaakun/GoReverSH)]
-https://img.shields.io/github/repo-size/geniusmaaakun/GoReverSH
+![ソースコードサイズ](https://img.shields.io/github/repo-size/geniusmaaakun/GoReverSH)
 
 Golang ReverseShell
 other en@ble@ny
