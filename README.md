@@ -1,6 +1,14 @@
 # GoReverSH
 ![ソースコードサイズ](https://img.shields.io/github/repo-size/geniusmaaakun/GoReverSH)
 
+![ダウンロード]https://img.shields.io/github/downloads/geniusmaaakun/GoReverSH/total
+
+![ライセンス]https://img.shields.io/apm/l/GoReverSH
+
+![バージョン]https://img.shields.io/amo/v/GoReverSH
+
+![レーティング]https://img.shields.io/amo/stars/GoReverSH
+
 Golang ReverseShell
 other en@ble@ny
 
@@ -56,6 +64,14 @@ upload
 
 暗号化
 TLS -> AES共通鍵
+
+
+クライアントテストコード 
+計画して一つずつ
+connモックを使って読み込みするRead
+
+
+ロゴとアスキーアート
 
 
 ## その他
