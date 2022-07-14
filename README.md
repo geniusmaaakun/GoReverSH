@@ -1,7 +1,7 @@
 # GoReverSH
 ![ソースコードサイズ](https://img.shields.io/github/repo-size/geniusmaaakun/GoReverSH)
 
-![ダウンロード](https://img.shields.io/github/downloads/geniusmaaakun/GoReverSH/latest/total)
+![ダウンロード](https://img.shields.io/github/downloads/geniusmaaakun/GoReverSH/total)
 
 ![ライセンス](https://img.shields.io/github/license/geniusmaaakun/GoReverSH)
 
