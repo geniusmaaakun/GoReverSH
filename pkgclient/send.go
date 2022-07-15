@@ -6,11 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"io/fs"
 	"log"
 	"net"
 	"os"
-	"path/filepath"
-	"strings"
 )
 
 func JsonEncodeToConnection(conn net.Conn, output utils.Output) error {
@@ -22,8 +21,9 @@ func JsonEncodeToConnection(conn net.Conn, output utils.Output) error {
 }
 
 //繰り返し読み込む関数。効率いい
-func RRead(reader io.Reader) ([]byte, int) {
+func RRead(reader io.Reader) ([]byte, error) {
 	var content []byte
+	var err error
 	buff := make([]byte, 1024)
 	size := 0
 
@@ -31,6 +31,7 @@ func RRead(reader io.Reader) ([]byte, int) {
 		n, err := reader.Read(buff)
 		if err != nil {
 			if n == 0 || errors.Is(err, io.EOF) {
+				err = nil
 				break
 			}
 			log.Println(err)
@@ -46,43 +47,56 @@ func RRead(reader io.Reader) ([]byte, int) {
 		}
 	}
 
-	return content, size
+	return content[:size], err
 }
 
-func SendFiles(filenames []string, conn net.Conn) error {
-	for _, fname := range filenames {
-		//sendfile args fname
-		f, err := os.Open(fname)
+func SendFiles(rootPath string, conn net.Conn) error {
+	//ファイルシステム構築
+	fsys := os.DirFS(rootPath)
+	err := fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return errors.New("failed filepath.Walk: " + err.Error())
+		}
+		if d.IsDir() {
+			return nil
+		}
+
+		f, err := os.Open(rootPath + "/" + path)
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 
 		fstats, err := f.Stat()
 		if err != nil {
 			return err
 		}
 
-		filePath := strings.Split(fname, "/")
-		fileLastname := filePath[len(filePath)-1]
-
-		//var content []byte
-		content, _ := RRead(f)
-
-		imageToBase64 := base64.StdEncoding.EncodeToString(content)
-		src := filepath.Join("screenshot", fileLastname)
-		fileinfo := utils.FileInfo{Name: src, Body: []byte(imageToBase64), Size: fstats.Size()}
-
-		output := utils.Output{Type: utils.FILE, FileInfo: fileinfo}
-
-		err = JsonEncodeToConnection(conn, output)
+		content, err := RRead(f)
 		if err != nil {
 			return err
 		}
+
+		imageToBase64 := base64.StdEncoding.EncodeToString(content)
+		fileinfo := utils.FileInfo{Name: "download/" + rootPath + "/" + path, Body: []byte(imageToBase64), Size: fstats.Size()}
+		output := utils.Output{Type: utils.FILE, FileInfo: fileinfo}
+
+		err = json.NewEncoder(conn).Encode(output)
+		if err != nil {
+			return nil
+		}
+
+		f.Close()
+
+		return nil
+	})
+
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
+/*
 func SendFile(filenames []string, conn net.Conn) error {
 	for _, fname := range filenames {
 		//sendfile args fname
@@ -137,3 +151,4 @@ func SendFile(filenames []string, conn net.Conn) error {
 	}
 	return nil
 }
+*/

