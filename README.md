@@ -30,7 +30,7 @@ make build_win
 実行画面の画像
 
 
-# 未実装
+## 未実装
 ### Test
 TestWaitNotice
 TestClist
@@ -42,48 +42,48 @@ get currentuser
 
 
 ## TODO
-* makefile
+[ ]makefile
 変数　ビルドファイル名など
 
-* ReadMe
+[ ]ReadMe
 
-* color
+[ ]color
 
-* clean
+[ ]clean
     ファイル全削除
 
 
-* upload　土日
+[ ]upload　土日
     dir対応
     downloadを逆にする。
     クライアント側もオブザーバーパターンにする方がいい
     outをデコード　
 
-* upload
+[ ]upload
 特定のUrlのzipダウンロード、解答するコードを送りつけて実行するプログラム開発
 もしくはDirectoryの場合は、zipを送りつけて解凍
 
 
-* ダウンロード
+[ ]ダウンロード
     サイズ、パーミッション
 
-* 出力ディレクトリ変更コマンド
+[ ]出力ディレクトリ変更コマンド
 
 
-* 別プログラムに偽装　バッチファイルなど
+[ ]別プログラムに偽装　バッチファイルなど
 管理権限
 
 
-* 暗号化
+[ ]暗号化
 TLS -> AES共通鍵
 
 
-* クライアントテストコード 
+[ ]クライアントテストコード 
 計画して一つずつ
 connモックを使って読み込みするRead
 
 
-* ロゴとアスキーアート
+[ ]ロゴとアスキーアート
 
 
 ## その他
