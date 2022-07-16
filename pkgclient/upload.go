@@ -4,6 +4,7 @@ import (
 	"GoReverSH/config"
 	"GoReverSH/utils"
 	"encoding/base64"
+	"errors"
 	"log"
 	"net"
 	"os"
@@ -11,10 +12,17 @@ import (
 	"strings"
 )
 
+var (
+	filePathError = errors.New("filepath error")
+)
+
 func ExecUpload(fileName string, conn net.Conn) error {
 	//filePath := strings.Split(commands[len(commands)-1], "/")
 	//fileName := commands[len(commands)-1]
 	filePath := strings.Split(fileName, "/")
+	if len(filePath) < 1 {
+		return filePathError
+	}
 	lastPathFromRecievedFile := strings.Join(filePath[:len(filePath)-1], "/")
 	//dir := "upload/"
 	dir := config.Config.UploadDIr

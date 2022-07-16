@@ -6,7 +6,7 @@
 
 Rogo画像
 
-# other 
+# Auther 
 en@ble@ny
 
 # 詳細
@@ -16,14 +16,16 @@ This is Golang ReverseShell
 # 使い方
 configにホストとポート指定
 
-## IOS
+## Build
+### IOS
 make build
-## Windows
+### Windows
 make build_win
 
-## Server
+## RUN
+### Server
 ./goreversh_server
-## Client
+### Client
 ./goreversh_client -host "host" -port "port"
 
 
@@ -80,34 +82,34 @@ connモックを使って読み込みするRead
 
 # 未実装
 ### Test
-TestWaitNotice
-TestClist
-Cert
+- [ ] TestWaitNotice
+- [ ] TestClist
+- [ ] CertTset
 
 ### 関数
-get hostname
-get currentuser
+- [ ] get hostname
+- [ ] get currentuser
 
 
-## その他
-ゴルーチンリークを注意
+### その他
+- [ ] ゴルーチンリークを注意
 
-build op make　でmainの変数に代入
+- [ ] build op make　でmainの変数に代入
 
-操作ログを残す
+- [ ] 操作ログを残す
 logfile
 出力をsetOutputで書き出し
 
 
-ダウンロードなどは、コネクション二つ貼ってやる方法もあり？
+- [ ] ダウンロードなどは、コネクション二つ貼ってやる方法もあり？
 制御コマンド用と通信用
 
 
-暗号化
+- [ ] 暗号化
 base64でキーを埋め込み　RSA AESで暗号化
 暗号文.共通鍵をサーバー側の秘密鍵で暗号化
 クライアントは、公開鍵を受け取り複合化する
 
 
-TLSを使う？
+- [ ] TLSを使う？
 実際は証明書を発行しないので、独自に暗号化する必要がある
