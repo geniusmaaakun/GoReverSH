@@ -6,7 +6,7 @@
 
 Rogo画像
 
-# Auther 
+# Author 
 en@ble@ny
 
 # Description
