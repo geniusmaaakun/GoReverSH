@@ -10,6 +10,8 @@ import (
 	"os"
 )
 
+//もし、uploadもこの関数を使うなら、｀utilsへ移動させてもいい
+
 //SendOutputJson
 func JsonEncodeToConnection(conn net.Conn, output utils.Output) error {
 	err := json.NewEncoder(conn).Encode(output)

@@ -14,3 +14,6 @@ runclient:
 
 test:
 	go test ./config -v
+	go test ./utils -v
+	go test ./pkgclient -v
+	go test ./pkgserver -v

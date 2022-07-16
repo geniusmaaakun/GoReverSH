@@ -6,12 +6,12 @@
 
 Rogo画像
 
-This is Golang ReverseShell
-
 # other 
 en@ble@ny
 
 # 詳細
+This is Golang ReverseShell
+
 
 # 使い方
 configにホストとポート指定
@@ -30,18 +30,11 @@ make build_win
 実行画面の画像
 
 
-## 未実装
-### Test
-TestWaitNotice
-TestClist
-Cert
-
-### 関数
-get hostname
-get currentuser
+## Test
+make test
 
 
-## TODO
+# TODO
 - [ ] makefile
 変数　ビルドファイル名など
 
@@ -84,6 +77,16 @@ connモックを使って読み込みするRead
 
 
 - [ ] ロゴとアスキーアート
+
+# 未実装
+### Test
+TestWaitNotice
+TestClist
+Cert
+
+### 関数
+get hostname
+get currentuser
 
 
 ## その他
