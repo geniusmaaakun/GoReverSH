@@ -9,11 +9,10 @@ Rogo画像
 # Auther 
 en@ble@ny
 
-# 詳細
+# Description
 This is Golang ReverseShell
 
-
-# 使い方
+# Usage
 configにホストとポート指定
 
 ## Build
@@ -91,7 +90,7 @@ connモックを使って読み込みするRead
 - [ ] get currentuser
 
 
-### その他
+### Others
 - [ ] ゴルーチンリークを注意
 
 - [ ] build op make　でmainの変数に代入
