@@ -10,6 +10,7 @@ import (
 	"os"
 )
 
+//SendOutputJson
 func JsonEncodeToConnection(conn net.Conn, output utils.Output) error {
 	err := json.NewEncoder(conn).Encode(output)
 	if err != nil {
