@@ -120,4 +120,5 @@ func RunShell(conn net.Conn) error {
 			}
 		}
 	}
+	return nil
 }
